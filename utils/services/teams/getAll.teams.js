@@ -18,7 +18,8 @@ async function getAllTeams(req, res) {
         }
 
         const teams = await Team.find(filter);
-        res.status(200).json({ success: true, data: teams });
+        const sortedTeams = teams.sort((a, b) => a.index - b.index);
+        res.status(200).json({ success: true, data: sortedTeams });
     } catch (error) {
         console.error(error);
         res.status(500).json({
