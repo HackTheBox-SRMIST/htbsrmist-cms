@@ -1,0 +1,29 @@
+.sidebar {
+    background-color: black;
+    color: white;
+    height: 100vh;
+    width: 100px;
+    position: fixed;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 20px;
+    z-index: 1;
+    /* border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px; */
+}
+
+.link {
+    color: white;
+    text-decoration: none;
+    padding: 10px 0;
+    font-size: 12px;
+    transition: background-color 0.3s, color 0.3s, padding-left 0.3s;
+}
+
+.link:hover {
+    background-color: #36af3a; 
+    color: black; 
+    padding-left: 20px;
+}

@@ -1,0 +1,26 @@
+
+.container {
+    display: flex;
+}
+
+.homeContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: calc(100vw - 250px); /* Adjust based on sidebar width */
+    height: 100vh;
+    background: linear-gradient(120deg, #36af3a, #000000);
+    color: white;
+    text-align: center;
+}
+
+.homeTitle {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.homeText {
+    font-size: 1.2em;
+}
