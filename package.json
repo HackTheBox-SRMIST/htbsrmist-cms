@@ -14,7 +14,7 @@
         "@chakra-ui/react": "^2.8.2",
         "@emotion/react": "^11.13.3",
         "@emotion/styled": "^11.13.0",
-        "axios": "^1.7.2",
+        "axios": "^1.7.5",
         "framer-motion": "^11.3.30",
         "mongoose": "^8.5.1",
         "next": "14.2.5",

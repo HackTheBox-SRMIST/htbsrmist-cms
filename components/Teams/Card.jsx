@@ -13,37 +13,46 @@ import {
 import Image from "next/image";
 
 const TeamCard = ({ team }) => {
+    const socials = team.socials;
+
     return (
         <Card maxW="sm">
             <CardBody>
                 <Image
-                    src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
-                    alt="Green double couch with wooden legs"
+                    src={team.pictureUrl}
+                    alt={team.name}
                     borderRadius="lg"
                     width={300}
                     height={200}
                 />
                 <Stack mt="6" spacing="3">
-                    <Heading size="md">Living room Sofa</Heading>
-                    <Text>
-                        This sofa is perfect for modern tropical spaces, baroque
-                        inspired spaces, earthy toned spaces and for people who
-                        love a chic design with a sprinkle of vintage design.
+                    <Heading size="md">{team.name}</Heading>
+                    <Text>{team.caption}</Text>
+                    <Text color="blue.600" fontSize="lg">
+                        Domain: {team.domain}
                     </Text>
-                    <Text color="blue.600" fontSize="2xl">
-                        $450
+                    <Text color="gray.600" fontSize="sm">
+                        Position: {team.position}
                     </Text>
                 </Stack>
             </CardBody>
             <Divider />
             <CardFooter>
                 <ButtonGroup spacing="2">
-                    <Button variant="solid" colorScheme="blue">
-                        Buy now
-                    </Button>
-                    <Button variant="ghost" colorScheme="blue">
-                        Add to cart
-                    </Button>
+                    {Object.entries(socials).map(([platform, url], index) => (
+                        <Button
+                            key={index}
+                            as="a"
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            variant="solid"
+                            colorScheme="blue"
+                        >
+                            {platform.charAt(0).toUpperCase() +
+                                platform.slice(1)}
+                        </Button>
+                    ))}
                 </ButtonGroup>
             </CardFooter>
         </Card>
