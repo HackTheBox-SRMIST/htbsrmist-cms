@@ -5,6 +5,11 @@ const teamsSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    usn: {
+        type: String,
+        required: true,
+        unique: true
+    },
     name: {
         type: String,
         required: true,
