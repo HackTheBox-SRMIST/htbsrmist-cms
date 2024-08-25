@@ -53,81 +53,86 @@ const TeamPage = () => {
     }, []);
 
     return (
-        <Box className="container mx-auto" p={4}>
-            <Text fontSize="4xl" fontWeight="bold" mb={4}>
-                Team Page
-            </Text>
-            <Text fontSize="lg" mb={4}>
-                Meet our awesome teams!
-            </Text>
-            <Stack spacing={4} mb={6}>
-                <FormControl>
-                    <FormLabel htmlFor="domain">Domain</FormLabel>
-                    <Select
-                        id="domain"
-                        placeholder="Select domain"
-                        value={domain}
-                        onChange={(e) => setDomain(e.target.value)}
-                    >
-                        <option value="">All</option>
-                        <option value="Development">Development</option>
-                        <option value="Cyber Security">Cyber Security</option>
-                        <option value="Creatives">Creatives</option>
-                        <option value="Corporate">Corporate</option>
-                    </Select>
-                </FormControl>
-                <FormControl>
-                    <FormLabel htmlFor="position">Position</FormLabel>
-                    <Select
-                        id="position"
-                        placeholder="Select position"
-                        value={position}
-                        onChange={(e) => setPosition(e.target.value)}
-                    >
-                        <option value="">All</option>
-                        <option value="Mainframe">Mainframe</option>
-                        <option value="Kernel">Kernel</option>
-                        <option value="Root">Root</option>
-                        <option value="Sudoer">Sudoer</option>
-                        <option value="Sticky Bit">Sticky Bit</option>
-                        <option value="Binary">Binary</option>
-                    </Select>
-                </FormControl>
-                <FormControl display="flex" alignItems="center">
-                    <FormLabel htmlFor="isCurrent" mb="0">
-                        Current Teams
-                    </FormLabel>
-                    <Checkbox
-                        id="isCurrent"
-                        isChecked={isCurrent}
-                        onChange={(e) => setIsCurrent(e.target.checked)}
-                    >
-                        Only current
-                    </Checkbox>
-                </FormControl>
-                <Button
-                    colorScheme="teal"
-                    onClick={handleFilter}
-                    isLoading={isFiltering}
-                >
-                    Filter
-                </Button>
-            </Stack>
-            <Box>
-                <Text fontSize="lg" fontWeight="bold" mb={4}>
-                    Teams
+        <div className="bg-black text-white">
+            <Box className="container mx-auto" p={4}>
+                <Text fontSize="4xl" fontWeight="bold" mb={4}>
+                    Team Page
                 </Text>
-                <Box
-                    display="grid"
-                    gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))"
-                    gap={4}
-                >
-                    {teams.map((team) => (
-                        <TeamCard key={team.email} team={team} />
-                    ))}
+                <div className="flex justify-evenly gap-4 items-center py-8 my-8 bg-[#777c78] rounded-2xl">
+                    <div className="w-[30%]">
+                        <FormControl>
+                            <FormLabel htmlFor="domain">Domain</FormLabel>
+                            <Select
+                                id="domain"
+                                placeholder="Select domain"
+                                value={domain}
+                                onChange={(e) => setDomain(e.target.value)}
+                                color="black"
+                            >
+                                <option value="">All</option>
+                                <option value="Development">Development</option>
+                                <option value="Cyber Security">
+                                    Cyber Security
+                                </option>
+                                <option value="Creatives">Creatives</option>
+                                <option value="Corporate">Corporate</option>
+                            </Select>
+                        </FormControl>
+                    </div>
+                    <div className="w-[30%]">
+                        <FormControl>
+                            <FormLabel htmlFor="position">Position</FormLabel>
+                            <Select
+                                id="position"
+                                placeholder="Select position"
+                                value={position}
+                                onChange={(e) => setPosition(e.target.value)}
+                                color="black"
+                            >
+                                <option value="">All</option>
+                                <option value="Mainframe">Mainframe</option>
+                                <option value="Kernel">Kernel</option>
+                                <option value="Root">Root</option>
+                                <option value="Sudoer">Sudoer</option>
+                                <option value="Sticky Bit">Sticky Bit</option>
+                                <option value="Binary">Binary</option>
+                            </Select>
+                        </FormControl>
+                    </div>
+                    <div className="w-[15%]">
+                        <FormControl display="flex" alignItems="center">
+                            <Checkbox
+                                id="isCurrent"
+                                isChecked={isCurrent}
+                                onChange={(e) => setIsCurrent(e.target.checked)}
+                            >
+                                Current Member
+                            </Checkbox>
+                        </FormControl>
+                    </div>
+                    <div className="w-[15%]">
+                        <Button
+                            colorScheme="teal"
+                            onClick={handleFilter}
+                            isLoading={isFiltering}
+                        >
+                            Filter
+                        </Button>
+                    </div>
+                </div>
+                <Box>
+                    <Box
+                        display="grid"
+                        gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))"
+                        gap={4}
+                    >
+                        {teams.map((team) => (
+                            <TeamCard key={team.email} team={team} />
+                        ))}
+                    </Box>
                 </Box>
             </Box>
-        </Box>
+        </div>
     );
 };
 

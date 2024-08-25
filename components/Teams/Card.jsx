@@ -8,7 +8,8 @@ import {
     Text,
     ButtonGroup,
     Button,
-    Divider
+    Divider,
+    Tooltip
 } from "@chakra-ui/react";
 import Image from "next/image";
 
@@ -18,12 +19,10 @@ const TeamCard = ({ team }) => {
     return (
         <Card maxW="sm">
             <CardBody>
-                <Image
+                <img
                     src={team.pictureUrl}
                     alt={team.name}
-                    borderRadius="lg"
-                    width={300}
-                    height={200}
+                    className="rounded-full border-2 border-solid border-htb-green/50  p-1 w-40 h-40 bg-cover bg-center object-cover brightness-125"
                 />
                 <Stack mt="6" spacing="3">
                     <Heading size="md">{team.name}</Heading>
@@ -38,22 +37,18 @@ const TeamCard = ({ team }) => {
             </CardBody>
             <Divider />
             <CardFooter>
-                <ButtonGroup spacing="2">
+                <ul>
                     {Object.entries(socials).map(([platform, url], index) => (
-                        <Button
-                            key={index}
-                            as="a"
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            variant="solid"
-                            colorScheme="blue"
-                        >
-                            {platform.charAt(0).toUpperCase() +
-                                platform.slice(1)}
-                        </Button>
+                        <li key={index}>
+                            <Tooltip label={url} placement="top" hasArrow>
+                                <Button size="sm" variant="outline">
+                                    {platform.charAt(0).toUpperCase() +
+                                        platform.slice(1)}
+                                </Button>
+                            </Tooltip>
+                        </li>
                     ))}
-                </ButtonGroup>
+                </ul>
             </CardFooter>
         </Card>
     );
