@@ -12,6 +12,7 @@ import {
     useToast
 } from "@chakra-ui/react";
 import TeamCard from "@/components/Teams/Card";
+import AddNew from "@/components/Teams/AddNew";
 
 const TeamPage = () => {
     const [teams, setTeams] = useState([]);
@@ -48,6 +49,18 @@ const TeamPage = () => {
         fetchTeams().finally(() => setIsFiltering(false));
     };
 
+    const handleDeleteTeam = () => {
+        fetchTeams();
+    };
+
+    const handleEditTeam = () => {
+        fetchTeams();
+    };
+
+    const handleAddTeam = () => {
+        fetchTeams();
+    };
+
     useEffect(() => {
         fetchTeams();
     }, []);
@@ -58,6 +71,7 @@ const TeamPage = () => {
                 <Text fontSize="4xl" fontWeight="bold" mb={4}>
                     Team Page
                 </Text>
+                <AddNew onSuccess={handleAddTeam} />
                 <div className="flex justify-evenly gap-4 items-center py-8 my-8 bg-[#777c78] rounded-2xl">
                     <div className="w-[30%]">
                         <FormControl>
@@ -127,7 +141,12 @@ const TeamPage = () => {
                         gap={4}
                     >
                         {teams.map((team) => (
-                            <TeamCard key={team.email} team={team} />
+                            <TeamCard
+                                key={team.usn}
+                                team={team}
+                                onDelete={handleDeleteTeam}
+                                onEdit={handleEditTeam}
+                            />
                         ))}
                     </Box>
                 </Box>
