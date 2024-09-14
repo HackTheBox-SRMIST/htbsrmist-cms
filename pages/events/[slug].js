@@ -86,18 +86,16 @@ const EventDetails = () => {
 
     const handleSave = async () => {
         try {
-            await axios.put(
-                `/api/v1/events/participants/${selectedParticipant.email}`,
-                {
-                    name: selectedParticipant.name,
-                    email: selectedParticipant.email,
-                    regNo: selectedParticipant.regNo,
-                    dept: selectedParticipant.dept,
-                    rsvp: selectedParticipant.rsvp,
-                    checkin: selectedParticipant.checkin,
-                    snacks: selectedParticipant.snacks
-                }
-            );
+            await axios.put(`/api/v1/events/participants/${slug}`, {
+                email: selectedParticipant.email,
+                name: selectedParticipant.name,
+                usn: selectedParticipant.usn,
+                dept: selectedParticipant.dept,
+                rsvp: selectedParticipant.rsvp,
+                checkin: selectedParticipant.checkin,
+                snacks: selectedParticipant.snacks,
+                isSrmite: selectedParticipant.isSrmite
+            });
             const response = await axios.get(
                 `/api/v1/events/participants/${slug}`
             );
@@ -123,7 +121,7 @@ const EventDetails = () => {
             (participant) =>
                 participant.name.toLowerCase().includes(lowerQuery) ||
                 participant.email.toLowerCase().includes(lowerQuery) ||
-                participant.regNo.toLowerCase().includes(lowerQuery)
+                participant.usn.toLowerCase().includes(lowerQuery)
         );
         setFilteredParticipants(filtered);
     };
@@ -181,7 +179,7 @@ const EventDetails = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 text-black">
+        <div className="container mx-auto px-4 py-8 text-black min-h-screen">
             <EventInfo event={event} />
             <div className="flex max-md:flex-col justify-between">
                 <button
@@ -212,9 +210,9 @@ const EventDetails = () => {
             </div>
 
             {showQRScanner && <QRScannerModal onClose={handleCloseQRScanner} />}
-            <h2 className="text-2xl font-bold mb-4 text-white">Participants</h2>
+            <h2 className="text-2xl font-bold mb-4 text-black">Participants</h2>
             <FilterDropdown onFilterChange={handleFilterChange} />
-            <p className="mb-4 text-white">
+            <p className="mb-4 text-black">
                 Total Participants: {filteredParticipants.length}
             </p>
             <SearchBar onSearch={handleSearch} onScan={handleQrScan} />

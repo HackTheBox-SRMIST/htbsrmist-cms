@@ -43,10 +43,11 @@ const Events = () => {
                                     <h3 className="text-xl font-bold">
                                         {event.event_name}
                                     </h3>
+                                    <p className="text-gray-800">
+                                        {event.event_time}
+                                    </p>
                                     <p className="text-gray-600">
-                                        {new Date(
-                                            event.event_date
-                                        ).toLocaleString()}
+                                        {event.event_date}
                                     </p>
                                     <p className="text-gray-800 mt-2">
                                         {event.venue}

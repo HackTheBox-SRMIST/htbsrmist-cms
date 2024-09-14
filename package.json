@@ -14,14 +14,22 @@
         "@chakra-ui/react": "^2.8.2",
         "@emotion/react": "^11.13.3",
         "@emotion/styled": "^11.13.0",
+        "@aws-sdk/client-ses": "^3.645.0",
+        "@aws-sdk/credential-provider-node": "^3.645.0",
+        "@yudiel/react-qr-scanner": "^2.0.8",
+        "@zxing/library": "^0.21.3",
         "aws-sdk": "^2.1691.0",
         "axios": "^1.7.5",
         "framer-motion": "^11.3.30",
         "mongoose": "^8.5.1",
         "next": "14.2.5",
+        "nodemailer": "^6.9.15",
+        "nodemailer-ses-transport": "^1.5.1",
+        "qrcode": "^1.5.4",
         "react": "^18",
         "react-dom": "^18",
-        "react-toastify": "^10.0.5"
+        "react-toastify": "^10.0.5",
+        "sharp": "^0.33.5"
     },
     "devDependencies": {
         "dotenv": "^16.4.5",
