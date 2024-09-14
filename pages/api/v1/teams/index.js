@@ -6,7 +6,7 @@ DBInstance();
 
 export default async function handler(req, res) {
     if (req.method === "GET") {
-        await getAllTeams(res);
+        await getAllTeams(req, res);
     } else if (req.method === "POST") {
         return await newTeams(req, res);
     } else {
