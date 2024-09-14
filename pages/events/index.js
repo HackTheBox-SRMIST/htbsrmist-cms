@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Card from "@/components/Events/Card";
 import Link from "next/link";
+import withAuth from "@/components/withAuth";
 
 const Events = () => {
     const [events, setEvents] = useState([]);
@@ -35,4 +36,4 @@ const Events = () => {
     );
 };
 
-export default Events;
+export default withAuth(Events);

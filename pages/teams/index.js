@@ -13,6 +13,7 @@ import {
 } from "@chakra-ui/react";
 import TeamCard from "@/components/Teams/Card";
 import AddNew from "@/components/Teams/AddNew";
+import withAuth from "@/components/withAuth";
 
 const TeamPage = () => {
     const [teams, setTeams] = useState([]);
@@ -155,4 +156,4 @@ const TeamPage = () => {
     );
 };
 
-export default TeamPage;
+export default withAuth(TeamPage);

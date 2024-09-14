@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
+import withAuth from "@/components/withAuth";
 
 const EventDetail = () => {
     const router = useRouter();
@@ -67,4 +68,4 @@ const EventDetail = () => {
     );
 };
 
-export default EventDetail;
+export default withAuth(EventDetail);
