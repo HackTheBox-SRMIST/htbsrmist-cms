@@ -1,20 +1,14 @@
-import Teams from "@/utils/models/teams.model";
+import getAllTeams from "@/utils/services/teams/getAll.teams";
+import newTeams from "@/utils/services/teams/new.teams";
 import DBInstance from "@/utils/db";
+
 DBInstance();
 
 export default async function handler(req, res) {
     if (req.method === "GET") {
-        try {
-            const teams = await Teams.find();
-
-            res.status(200).json({ success: true, data: teams });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                success: false,
-                error: "Internal Server Error"
-            });
-        }
+        await getAllTeams(req, res);
+    } else if (req.method === "POST") {
+        return await newTeams(req, res);
     } else {
         res.status(405).json({ success: false, error: "Method Not Allowed" });
     }

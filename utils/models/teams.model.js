@@ -5,6 +5,11 @@ const teamsSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    usn: {
+        type: String,
+        required: true,
+        unique: true
+    },
     name: {
         type: String,
         required: true,
@@ -58,6 +63,6 @@ const teamsSchema = new mongoose.Schema({
     }
 });
 
-const Teams = mongoose.model("teams", teamsSchema);
+const Teams = mongoose.models.teams || mongoose.model("teams", teamsSchema);
 
 export default Teams;
