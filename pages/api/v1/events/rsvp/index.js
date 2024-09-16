@@ -47,7 +47,7 @@ export default async function handler(req, res) {
                         <body style="text-align:center; font-family:Arial, sans-serif;">
                             <h1>RSVP Already Confirmed</h1>
                             <p>You have already RSVPd for the event: <strong>${event.event_name}</strong>.</p>
-                            <p>If you need to make changes or have questions, please contact us at community@githubsrmist.tech.</p>
+                            <p>If you need to make changes or have questions, please contact us at community@htbsrmist.tech.</p>
                         </body>
                     </html>
                 `);
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
             await sendEmailWithAttachment(
                 email,
-                `Event Ticket | ${event.event_name} | GitHub Community SRM`,
+                `Event Ticket | ${event.event_name} | HackTheBox SRMIST `,
                 emailBody,
                 qrCodeImage,
                 "event-ticket.png"
