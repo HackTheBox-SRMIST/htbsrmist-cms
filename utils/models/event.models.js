@@ -9,6 +9,10 @@ const eventSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    rsvpLimit: {
+        type: Number,
+        required: true
+    },
     event_description: {
         type: String,
         required: true
