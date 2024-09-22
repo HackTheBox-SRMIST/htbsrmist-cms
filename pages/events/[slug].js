@@ -32,7 +32,7 @@ const EventDetails = () => {
         rsvp: false,
         checkin: false,
         snacks: false,
-        srmite : false
+        srmite : false,
     });
     const router = useRouter();
     const { slug } = router.query;
@@ -69,7 +69,7 @@ const EventDetails = () => {
                 const matchCheckin =
                     !filterOptions.checkin || participant.checkin;
                 const matchSnacks = !filterOptions.snacks || participant.snacks;
-                const matchSrmite = !filterOptions.srmite || participant.isSrmite;
+                const matchSrmite = !filterOptions.srmite || !participant.isSrmite;
                 return matchRsvp && matchCheckin && matchSnacks && matchSrmite;
             });
             setFilteredParticipants(filtered);
