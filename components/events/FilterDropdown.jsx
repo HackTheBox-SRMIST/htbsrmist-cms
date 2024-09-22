@@ -44,7 +44,7 @@ const FilterDropdown = ({ onFilterChange }) => {
                 id="rsvp"
               />
               <label htmlFor="rsvp" className="ml-2">
-                Srmite
+                Non-Srmite
               </label>
             </div>
             <div className="flex items-center mt-2">
