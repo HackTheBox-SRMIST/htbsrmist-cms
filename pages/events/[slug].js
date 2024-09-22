@@ -65,7 +65,7 @@ const EventDetails = () => {
     useEffect(() => {
         const applyFilters = () => {
             const filtered = participants.filter((participant) => {
-                const matchRsvp = !filterOptions.rsvp || participant.rsvp;
+                const matchRsvp = !filterOptions.rsvp || !participant.rsvp;
                 const matchCheckin =
                     !filterOptions.checkin || participant.checkin;
                 const matchSnacks = !filterOptions.snacks || participant.snacks;

@@ -56,7 +56,7 @@ const FilterDropdown = ({ onFilterChange }) => {
                 id="rsvp"
               />
               <label htmlFor="rsvp" className="ml-2">
-                RSVP
+                Non-RSVP
               </label>
             </div>
             <div className="flex items-center mt-2">
