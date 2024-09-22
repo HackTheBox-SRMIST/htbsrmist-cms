@@ -38,6 +38,18 @@ const FilterDropdown = ({ onFilterChange }) => {
             <div className="flex items-center">
               <input
                 type="checkbox"
+                name="srmite"
+                checked={filters.srmite}
+                onChange={handleFilterChange}
+                id="rsvp"
+              />
+              <label htmlFor="rsvp" className="ml-2">
+                Srmite
+              </label>
+            </div>
+            <div className="flex items-center mt-2">
+              <input
+                type="checkbox"
                 name="rsvp"
                 checked={filters.rsvp}
                 onChange={handleFilterChange}
