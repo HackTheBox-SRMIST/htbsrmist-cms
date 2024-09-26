@@ -10,12 +10,12 @@
         "prepare": "husky install"
     },
     "dependencies": {
+        "@aws-sdk/client-ses": "^3.645.0",
+        "@aws-sdk/credential-provider-node": "^3.645.0",
         "@chakra-ui/next-js": "^2.2.0",
         "@chakra-ui/react": "^2.8.2",
         "@emotion/react": "^11.13.3",
         "@emotion/styled": "^11.13.0",
-        "@aws-sdk/client-ses": "^3.645.0",
-        "@aws-sdk/credential-provider-node": "^3.645.0",
         "@yudiel/react-qr-scanner": "^2.0.8",
         "@zxing/library": "^0.21.3",
         "aws-sdk": "^2.1691.0",
@@ -27,6 +27,7 @@
         "nodemailer-ses-transport": "^1.5.1",
         "qrcode": "^1.5.4",
         "react": "^18",
+        "react-chartjs-2": "^5.2.0",
         "react-dom": "^18",
         "react-toastify": "^10.0.5",
         "sharp": "^0.33.5"
