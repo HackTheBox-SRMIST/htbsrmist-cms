@@ -1,5 +1,8 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import ThemeToggle from "./ThemeToggle";
+import ButtonLink from "./ButtonLink";
+import withAuth from "../withAuth";
 
 const Navbar = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -19,59 +22,56 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="bg-gray-800 p-4">
+        <nav className="dark:bg-dark-background-darker bg-light-background-dark p-6">
             <div className="container mx-auto flex justify-between items-center">
-                <h3 className="text-white text-lg font-bold">HTBSRMIST</h3>
-                <ul className="flex items-center space-x-6">
+                <h3 className="lg:text-xl text-2xl dark:text-dark-color text-light-color  font-bold">HTBSRMIST</h3>
+                <ul className="flex items-center space-x-6 text-light-color dark:text-dark-color">
                     {isLoggedIn ? (
                         <>
                             <li>
-                                <a
+                                <ButtonLink
                                     href="/events"
-                                    className="text-white hover:text-gray-400 transition duration-300"
                                 >
                                     Events
-                                </a>
+                                </ButtonLink>
                             </li>
                             <li>
-                                <a
+                                <ButtonLink
                                     href="/teams"
-                                    className="text-white hover:text-gray-400 transition duration-300"
                                 >
                                     Teams
-                                </a>
+                                </ButtonLink>
                             </li>
                             <li>
-                                <a
+                                <ButtonLink
                                     href="/recruitments"
-                                    className="text-white hover:text-gray-400 transition duration-300"
                                 >
                                     Recruitments
-                                </a>
+                                </ButtonLink>
                             </li>
                             <li>
-                                <button
+                                <ButtonLink
                                     onClick={handleLogout}
-                                    className="bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded transition duration-300"
                                 >
                                     Logout
-                                </button>
+                                </ButtonLink>
                             </li>
                         </>
                     ) : (
                         <li>
-                            <a
+                            <ButtonLink
                                 href="/"
-                                className="text-white hover:text-gray-400 transition duration-300"
+                                className=" transition duration-300"
                             >
                                 Login
-                            </a>
+                            </ButtonLink>
                         </li>
                     )}
+                    <ThemeToggle/>
                 </ul>
             </div>
         </nav>
     );
 };
 
-export default Navbar;
+export default withAuth(Navbar);
