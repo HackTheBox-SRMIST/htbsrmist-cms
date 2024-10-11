@@ -13,13 +13,11 @@ import {
 import {
     Box,
     Button,
-    Center,
     Flex,
     Heading,
     Link,
     Checkbox,
     VStack,
-    Spinner,
     Table,
     Tbody,
     Td,
@@ -35,6 +33,7 @@ import {
 } from "@chakra-ui/react";
 
 import withAuth from "@/components/withAuth";
+import LoadingSpinner from "@/components/shared/Loading";
 
 ChartJS.register(
     ArcElement,
@@ -188,11 +187,7 @@ const Recruitment = () => {
     }, [recruitmentData, filters]);
 
     if (loading) {
-        return (
-            <Center>
-                <Spinner size="xl" />
-            </Center>
-        );
+        return <LoadingSpinner />;
     }
 
     if (error) {

@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import withAuth from "@/components/withAuth";
+import LoadingSpinner from "@/components/shared/Loading";
 
 const Events = () => {
     const [currentEvents, setCurrentEvents] = useState([]);
     const [pastEvents, setPastEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const cleanDate = (dateStr) => {
@@ -37,11 +39,17 @@ const Events = () => {
                 setPastEvents(past);
             } catch (error) {
                 console.error("Error fetching events:", error);
+            } finally {
+                setLoading(false)
             }
         };
 
         fetchEvents();
     }, []);
+
+    if (loading) {
+        return <LoadingSpinner/>
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -87,7 +95,7 @@ const Events = () => {
             <h1 className="text-3xl font-bold text-center my-8">
                 Past Events
             </h1>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {pastEvents.length > 0 ? (
                     pastEvents.map((event) => (
