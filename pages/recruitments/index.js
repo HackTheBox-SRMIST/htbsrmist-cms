@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { Pie } from "react-chartjs-2";
 import {
@@ -28,12 +28,13 @@ import {
     Menu,
     MenuButton,
     MenuList,
-    
-
+    Center
 } from "@chakra-ui/react";
 
 import withAuth from "@/components/withAuth";
 import LoadingSpinner from "@/components/shared/Loading";
+import DownloadJSON from "@/components/shared/DownloadJSON";
+import SelectJSONFields from "@/components/shared/SelectJSONFields";
 
 ChartJS.register(
     ArcElement,
@@ -67,32 +68,47 @@ const Recruitment = () => {
         "Creatives"
     ], []);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get("/api/v1/recruitments");
-                const data = response.data.data;
-                setRecruitmentData(data);
-                processDomains(data);
-            } catch (err) {
-                setError(
-                    "Error fetching recruitment data. Please try again later."
-                );
-                console.error("Error:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+    const [selectedJsonFields, setSelectedJsonFields] = useState({
+        name: true,
+        email: true,
+        reg_no: false,
+        ph_no: false
+    });
+
+    const handleJsonFieldChange = useCallback((field) => {
+        setSelectedJsonFields(prev => ({
+            ...prev,
+            [field]: !prev[field]
+        }));
     }, []);
 
-    const determineYear = useMemo(() => (usn) => {
+    const fetchData = useCallback(async () => {
+        try {
+            const response = await axios.get("/api/v1/recruitments");
+            const data = response.data.data;
+            setRecruitmentData(data);
+            processDomains(data);
+        } catch (err) {
+            setError(
+                "Error fetching recruitment data. Please try again later."
+            );
+            console.error("Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const determineYear = useCallback((usn) => {
         const currentYear = new Date().getFullYear().toString().slice(-2);
         const usnYear = usn.substring(2, 4);
         return usnYear === currentYear ? "1st" : "2nd";
     }, []);
 
-    const processDomains = useMemo(() => (data) => {
+    const processDomains = useCallback((data) => {
         const domain1Count = {};
         const domain2Count = {};
 
@@ -125,9 +141,9 @@ const Recruitment = () => {
         setYearCounts({ firstYear, secondYear });
     }, [domainsList, determineYear]);
 
-    const handleShowTable = useMemo(() => () => setShowTable(prev => !prev), []);
+    const handleShowTable = useCallback(() => setShowTable(prev => !prev), []);
 
-    const handleFilterChange = useMemo(() => (domainType, selectedDomains) => {
+    const handleFilterChange = useCallback((domainType, selectedDomains) => {
         setFilters(prev => {
             const currentSelections = prev[domainType];
             const isAlreadySelected = currentSelections.includes(selectedDomains);
@@ -185,6 +201,31 @@ const Recruitment = () => {
             return domain1Match && domain2Match;
         });
     }, [recruitmentData, filters]);
+
+    const handleDownloadCSV = useCallback(() => {
+        if (filteredData.length > 0) {
+            const csv = convertToCSV(filteredData);
+            const blob = new Blob([csv], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `recruitment_data.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            console.warn("No data to download.");
+        }
+    }, [filteredData]);
+
+    const convertToCSV = (data) => {
+        const header = Object.keys(data[0]).join(",") + "\n";
+        const rows = data.map((row) =>
+            Object.values(row)
+                .map((value) => `"${value}"`)
+                .join(",")
+        );
+        return header + rows.join("\n");
+    };
 
     if (loading) {
         return <LoadingSpinner />;
@@ -248,62 +289,82 @@ const Recruitment = () => {
                 </Button>
             </Flex>
 
-            <Flex justify="center" mb={4} gap={8}>
+           
+
+            <Flex justify="space-between" mb={4} gap={8}>
                 {showTable && (
-                    <>
-                        <Menu>
-                            <MenuButton as={Button} colorScheme="blue">
-                                Filter Domain 1
-                            </MenuButton>
-                            <MenuList> 
-                                <VStack align="start" spacing={1}>
-                                    {domainsList.map(domain => (
-                                        <Box key={domain} ml={3}> 
-                                            <Checkbox
-                                                value={domain}
-                                                isChecked={filters.domain1.includes(domain)}
-                                                onChange={() => handleFilterChange('domain1', domain)}
-                                            >
-                                                {domain}
-                                            </Checkbox>
-                                        </Box>
-                                    ))}
-                                </VStack>
-                            </MenuList>
-                        </Menu>
+                    <>  
+                        <Flex justify="left" gap={8} mb={4}>
+                            <Button
+                                colorScheme="green"
+                                onClick={handleDownloadCSV}
+                            >
+                                Download CSV
+                            </Button>
+                            <DownloadJSON
+                                filteredData={filteredData}
+                                fileName="recruitment_data"
+                                selectedJsonFields={selectedJsonFields}
+                            />
+                        </Flex>
+                        
+                        <Flex justify="right" gap={8}>
+                            <SelectJSONFields
+                                selectedJsonFields={selectedJsonFields}
+                                handleJsonFieldChange={handleJsonFieldChange}
+                            />  
+                            <Menu>
+                                <MenuButton as={Button} colorScheme="blue">
+                                    Filter Domain 1
+                                </MenuButton>
+                                <MenuList> 
+                                    <VStack align="start" spacing={1}>
+                                        {domainsList.map(domain => (
+                                            <Box key={domain} ml={3}> 
+                                                <Checkbox
+                                                    value={domain}
+                                                    isChecked={filters.domain1.includes(domain)}
+                                                    onChange={() => handleFilterChange('domain1', domain)}
+                                                >
+                                                    {domain}
+                                                </Checkbox>
+                                            </Box>
+                                        ))}
+                                    </VStack>
+                                </MenuList>
+                            </Menu>
 
-                        <Menu>
-                            <MenuButton as={Button} colorScheme="blue">
-                                Filter Domain 2
-                            </MenuButton>
-                            <MenuList> 
-                                <VStack align="start">
-                                    {domainsList.map(domain => (
-                                        <Box key={domain} ml={3}> 
-                                            <Checkbox
-                                                value={domain}
-                                                isChecked={filters.domain2.includes(domain)}
-                                                onChange={() => handleFilterChange('domain2', domain)}
-                                            >
-                                                {domain}
-                                            </Checkbox>
-                                        </Box>
-                                    ))}
-                                </VStack>
-                            </MenuList>
-                        </Menu>
-
+                            <Menu>
+                                <MenuButton as={Button} colorScheme="blue">
+                                    Filter Domain 2
+                                </MenuButton>
+                                <MenuList> 
+                                    <VStack align="start">
+                                        {domainsList.map(domain => (
+                                            <Box key={domain} ml={3}> 
+                                                <Checkbox
+                                                    value={domain}
+                                                    isChecked={filters.domain2.includes(domain)}
+                                                    onChange={() => handleFilterChange('domain2', domain)}
+                                                >
+                                                    {domain}
+                                                </Checkbox>
+                                            </Box>
+                                        ))}
+                                    </VStack>
+                                </MenuList>
+                            </Menu>                          
+                        </Flex>                        
                     </>
                 )}
-            </Flex>
-
-            
+            </Flex>            
 
             {showTable && (
                 <Box overflowX="auto" mt={4}>
-                    <Text fontSize="lg" mb={4}>
+                    <Text fontSize="lg" mb={4} textAlign="center" width="100%">
                         Displaying {filteredData.length} record{filteredData.length !== 1 ? 's' : ''} after filtering.
                     </Text>
+
                     <Table variant="striped" colorScheme="gray">
                         <Thead>
                             <Tr>
@@ -325,43 +386,41 @@ const Recruitment = () => {
                                     <Td>{item.domain1}</Td>
                                     <Td>{item.domain2}</Td> 
                                     <Td>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                gap: "10px"
-                                            }}
-                                        >
+                                        <Flex gap={2}>
                                             {item.linkedin && (
-                                                <Link color='teal.500'
+                                                <Link
+                                                    color='teal.500'
                                                     href={item.linkedin}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     aria-label="LinkedIn"
-                                                    variant="outline"
-                                                    size="sm"
-                                                >Linkedin</Link>
+                                                >
+                                                    LinkedIn
+                                                </Link>
                                             )}
                                             {item.additionalLink && (
-                                                <Link color='teal.500'
+                                                <Link
+                                                    color='teal.500'
                                                     href={item.additionalLink}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     aria-label="Portfolio"
-                                                    variant="outline"
-                                                    size="sm"
-                                                >Portfolio</Link>
+                                                >
+                                                    Portfolio
+                                                </Link>
                                             )}
                                             {item.resume && (
-                                                <Link color='teal.500'
+                                                <Link
+                                                    color='teal.500'
                                                     href={item.resume}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     aria-label="Resume"
-                                                    variant="outline"
-                                                    size="sm"
-                                                >Resume</Link>
+                                                >
+                                                    Resume
+                                                </Link>
                                             )}
-                                        </div>
+                                        </Flex>
                                     </Td>
                                     <Td>{item.phone}</Td>
                                 </Tr>
