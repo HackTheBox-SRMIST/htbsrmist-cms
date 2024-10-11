@@ -4,6 +4,8 @@ import Footer from "@/components/shared/Footer";
 import { ChakraProvider } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
+import { ThemeProvider } from "@/provider/ThemeProvider";
+import { Themes } from "@/utils/misc/themes";
 
 export default function App({ Component, pageProps }) {
     const router = useRouter();
@@ -34,11 +36,28 @@ export default function App({ Component, pageProps }) {
     }, [router]);
     return (
         <>
-            <ChakraProvider>
-                <Navbar />
-                <Component {...pageProps} />
-                <Footer />
-            </ChakraProvider>
+            <ThemeProvider>
+                <meta
+                    name="theme-color"
+                    media="(prefers-color-scheme: dark)"
+                    content={Themes.dark.background.normal}
+                />
+                <meta
+                    name="theme-color"
+                    media="(prefers-color-scheme: light)"
+                    content={Themes.light.background.normal}
+                />
+
+                <meta
+                    name="theme-color"
+                    content={Themes.dark.background.normal}
+                />
+                <ChakraProvider>
+                    <Navbar />
+                    <Component {...pageProps} />
+                    <Footer />
+                </ChakraProvider>
+            </ThemeProvider>
         </>
     );
 }
