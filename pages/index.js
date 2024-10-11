@@ -104,6 +104,12 @@ export default function Home() {
                     >
                         Go to Events
                     </button>
+                    <button
+                        onClick={() => handleRedirect("/recruitments")}
+                        className="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded-lg"
+                    >
+                        Go to Recruitments
+                    </button>
                 </div>
             )}
         </div>
