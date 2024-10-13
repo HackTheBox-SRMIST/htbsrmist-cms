@@ -22,9 +22,9 @@ const ButtonLink = ({ children, href, className, ...props }) => {
     if (isRecruitmentPath) {
       return "text-[#786CFF] bg-[#786CFF1e] hover:text-[#786CFF] dark:text-[#857aff] dark:bg-[#786CFF1e] dark:hover:text-[#857aff]";
     } else if (isActive) {
-      return "bg-light-side text-light-accent dark:bg-dark-side dark:text-dark-accent";
+      return "bg-light-background-darker dark:text-light-accent text-light-color dark:bg-dark-side dark:text-dark-accent";
     } else {
-      return className || "hover:bg-light-side hover:text-light-accent hover:opacity-70 dark:hover:bg-dark-side dark:hover:text-dark-accent";
+      return className || "hover:bg-light-background-darker hover:text-light-color hover:opacity-70 dark:hover:bg-dark-side dark:hover:text-dark-accent";
     }
   };
 

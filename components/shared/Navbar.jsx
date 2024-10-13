@@ -2,7 +2,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import ButtonLink from "./ButtonLink";
-import withAuth from "../withAuth";
 
 const Navbar = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -22,9 +21,9 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="dark:bg-dark-background-darker bg-light-background-dark p-6">
+        <nav className="dark:bg-dark-background-normal bg-light-background-dark p-6">
             <div className="container mx-auto flex justify-between items-center">
-                <h3 className="lg:text-xl text-2xl dark:text-dark-color text-light-color  font-bold">HTBSRMIST</h3>
+                <h3 className="lg:text-xl text-2xl dark:text-dark-accent text-light-color  font-bold">HTBSRMIST</h3>
                 <ul className="flex items-center space-x-6 text-light-color dark:text-dark-color">
                     {isLoggedIn ? (
                         <>
@@ -61,7 +60,6 @@ const Navbar = () => {
                         <li>
                             <ButtonLink
                                 href="/"
-                                className=" transition duration-300"
                             >
                                 Login
                             </ButtonLink>
@@ -74,4 +72,4 @@ const Navbar = () => {
     );
 };
 
-export default withAuth(Navbar);
+export default Navbar;

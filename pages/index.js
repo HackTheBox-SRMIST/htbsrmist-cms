@@ -66,7 +66,7 @@ export default function Home() {
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg text-black"
+                                className="w-full rounded-2xl rounded-tl-[6px] rounded-tr-[6px] bg-light-background-normal dark:bg-dark-input px-6 py-3 font-sans font-medium text-light-color dark:text-dark-color dark:focus:outline-dark-accent"
                                 required
                             />
                         </div>
@@ -78,7 +78,7 @@ export default function Home() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg text-black"
+                                className="w-full rounded-2xl rounded-tl-[6px] rounded-tr-[6px] bg-light-background-normal dark:bg-dark-input px-6 py-3 font-sans font-medium text-light-color dark:text-dark-color"
                                 required
                             />
                         </div>
@@ -91,7 +91,7 @@ export default function Home() {
                         </button>
                     </form>
                 ) : (
-                    <div className="text-center space-y-4">
+                    <div className="text-center space-y-4 bg-light-background-dark dark:bg-dark-background-darker">
                         <button
                             onClick={() => handleRedirect("/teams")}
                             className="w-full bg-green-600 hover:bg-green-500 text-white py-2 px-4 rounded-lg"
