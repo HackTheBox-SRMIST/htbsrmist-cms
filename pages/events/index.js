@@ -31,7 +31,7 @@ const Events = () => {
                 today.setHours(0, 0, 0, 0);
 
                 const current = eventsData.filter(
-                    (event) => event.event_date_obj >= today || event.is_active
+                    (event) => event.event_date_obj >= today && event.is_active
                 );
                 const past = eventsData.filter(
                     (event) => event.event_date_obj < today
