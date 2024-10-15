@@ -9,6 +9,7 @@ import SearchBar from "@/components/events/SearchBar";
 import SendRsvpModal from "@/components/events/SendRsvpModal";
 import FilterDropdown from "@/components/events/FilterDropdown";
 import QRScannerModal from "@/components/events/QRScannerModal";
+import LoadingSpinner from "@/components/shared/Loading";
 
 const convertToCSV = (data) => {
     const header = Object.keys(data[0]).join(",") + "\n";
@@ -173,7 +174,7 @@ const EventDetails = () => {
     };
 
     if (loading) {
-        return <p>Loading...</p>;
+        return <LoadingSpinner />;
     }
 
     if (!event) {
@@ -181,7 +182,7 @@ const EventDetails = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 text-black min-h-screen">
+        <div className="bg-light-background-darker dark:bg-dark-background-darker px-4 py-8 text-black min-h-screen">
             <EventInfo event={event} />
             <div className="flex max-md:flex-col justify-between">
                 <button
@@ -212,13 +213,12 @@ const EventDetails = () => {
             </div>
 
             {showQRScanner && <QRScannerModal onClose={handleCloseQRScanner} />}
-            <h2 className="text-2xl font-bold mb-4 text-black">Participants</h2>
+            <h2 className="text-2xl font-bold mb-4 dark:text-dark-color text-light-color">Participants</h2>
             <FilterDropdown onFilterChange={handleFilterChange} />
-            <p className="mb-4 text-black">
+            <p className="my-4 dark:text-dark-color text-light-color">
                 Total Participants: {filteredParticipants.length}
             </p>
-            <p className="mb-4 text-black">Venue: {event.venue}</p>
-            <p className="mb-4 text-black">RSVP Limit: {event.rsvpLimit}</p>
+            <p className="mb-4 dark:text-dark-color text-light-color">RSVP Limit: {event.rsvpLimit}</p>
             <SearchBar onSearch={handleSearch} onScan={handleQrScan} />
             <ParticipantList
                 participants={filteredParticipants}

@@ -14,6 +14,7 @@ import {
 import TeamCard from "@/components/Teams/Card";
 import AddNew from "@/components/Teams/AddNew";
 import withAuth from "@/components/withAuth";
+import LoadingSpinner from "@/components/shared/Loading";
 
 const TeamPage = () => {
     const [teams, setTeams] = useState([]);
@@ -21,6 +22,7 @@ const TeamPage = () => {
     const [position, setPosition] = useState("");
     const [isCurrent, setIsCurrent] = useState(true);
     const [isFiltering, setIsFiltering] = useState(false);
+    const [loading, setLoading] = useState(true);
     const toast = useToast();
 
     const fetchTeams = async () => {
@@ -42,6 +44,8 @@ const TeamPage = () => {
                 duration: 5000,
                 isClosable: true
             });
+        }finally {
+            setLoading(false);
         }
     };
 
@@ -66,15 +70,20 @@ const TeamPage = () => {
         fetchTeams();
     }, []);
 
+    if (loading) {
+        return <LoadingSpinner />;
+    }
     return (
-        <div className="bg-black text-white">
-            <Box className="container mx-auto" p={4}>
-                <Text fontSize="4xl" fontWeight="bold" mb={4}>
+        <div className="bg-light-background-darker dark:bg-dark-background-darker dark:text-dark-accent text-light-color">
+            <div className="container mx-auto" p={4}>
+                <h1 className="text-3xl font-bold text-start px-2 pt-4 mb-8">
                     Team Page
-                </Text>
+                </h1>
+                <div className="px-2">
                 <AddNew onSuccess={handleAddTeam} />
-                <div className="flex justify-evenly gap-4 items-center py-8 my-8 bg-[#777c78] rounded-2xl">
-                    <div className="w-[30%]">
+                </div>
+                <div className="flex flex-col md:flex-row justify-evenly gap-4 items-center py-8 my-8 bg-light-success-background dark:bg-[#777c78] rounded-2xl ">
+                    <div className="w-[80%] md:w-[30%]">
                         <FormControl>
                             <FormLabel htmlFor="domain">Domain</FormLabel>
                             <Select
@@ -94,7 +103,7 @@ const TeamPage = () => {
                             </Select>
                         </FormControl>
                     </div>
-                    <div className="w-[30%]">
+                    <div className="w-[80%] md:w-[30%]">
                         <FormControl>
                             <FormLabel htmlFor="position">Position</FormLabel>
                             <Select
@@ -114,7 +123,7 @@ const TeamPage = () => {
                             </Select>
                         </FormControl>
                     </div>
-                    <div className="w-[15%]">
+                    <div className="w-[80%] md:w-[15%]">
                         <FormControl display="flex" alignItems="center">
                             <Checkbox
                                 id="isCurrent"
@@ -125,7 +134,7 @@ const TeamPage = () => {
                             </Checkbox>
                         </FormControl>
                     </div>
-                    <div className="w-[15%]">
+                    <div className="w-[80%] md:w-[15%]">
                         <Button
                             colorScheme="teal"
                             onClick={handleFilter}
@@ -151,7 +160,7 @@ const TeamPage = () => {
                         ))}
                     </Box>
                 </Box>
-            </Box>
+            </div>
         </div>
     );
 };

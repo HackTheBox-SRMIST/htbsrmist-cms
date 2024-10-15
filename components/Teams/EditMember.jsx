@@ -12,6 +12,9 @@ import {
     FormLabel,
     Input,
     Stack,
+    RadioGroup,
+    Radio,
+    Select,
     useToast
 } from "@chakra-ui/react";
 import axios from "axios";
@@ -78,20 +81,44 @@ const EditModal = ({ isOpen, onClose, team, onEdit }) => {
                         </FormControl>
                         <FormControl>
                             <FormLabel>Domain</FormLabel>
-                            <Input
+                            <Select
                                 name="domain"
-                                value={formData.domain}
-                                onChange={handleInputChange}
-                            />
+                                value={formData.domain}  
+                                onChange={(e) =>
+                                    setFormData((prevData) => ({
+                                        ...prevData,
+                                        domain: e.target.value 
+                                    }))
+                                }
+                            >
+                                <option value="Cyber Security">Cybersecurity</option>
+                                <option value="Development">Development</option>
+                                <option value="Creatives">Creatives</option>
+                                <option value="Corporate">Corporate</option>
+                            </Select>
                         </FormControl>
+
                         <FormControl>
                             <FormLabel>Position</FormLabel>
-                            <Input
+                            <Select
                                 name="position"
-                                value={formData.position}
-                                onChange={handleInputChange}
-                            />
+                                value={formData.position} 
+                                onChange={(e) =>
+                                    setFormData((prevData) => ({
+                                        ...prevData,
+                                        position: e.target.value
+                                    }))
+                                }
+                            >
+                                <option value="Mainframe">Mainframe</option>
+                                <option value="Kernel">Kernel</option>
+                                <option value="Root">Root</option>
+                                <option value="Sudoer">Sudoer</option>
+                                <option value="Sticky Bit">Sticky Bit</option>
+                                <option value="Binary">Binary</option>
+                            </Select>
                         </FormControl>
+
                         <FormControl>
                             <FormLabel>Caption</FormLabel>
                             <Input
@@ -142,12 +169,22 @@ const EditModal = ({ isOpen, onClose, team, onEdit }) => {
                         </FormControl>
                         <FormControl>
                             <FormLabel>Current Member</FormLabel>
-                            <Input
+                            <RadioGroup
                                 name="isCurrent"
-                                value={formData.isCurrent}
-                                onChange={handleInputChange}
-                            />
+                                value={String(formData.isCurrent)} 
+                                onChange={(value) => setFormData((prevData) => ({
+                                    ...prevData,
+                                    isCurrent: value === 'true' 
+                                }))
+                            }
+                            >
+                                <Stack direction="row">
+                                    <Radio value="true">True</Radio>
+                                    <Radio value="false">False</Radio>
+                                </Stack>
+                            </RadioGroup>
                         </FormControl>
+
                     </Stack>
                 </ModalBody>
 
