@@ -1,19 +1,19 @@
 import React, { useState } from "react";
 import {
-    Card,
-    CardHeader,
-    CardBody,
-    CardFooter,
-    Stack,
-    Heading,
-    Text,
     ButtonGroup,
     Button,
-    Divider,
     Tooltip,
     useToast,
     useDisclosure
 } from "@chakra-ui/react";
+import Badge from "@/components/shared/Badge";
+import { FaGithub, FaLink, FaLinkedin, FaTwitter } from "react-icons/fa";
+const socialIcons = {
+    github: <FaGithub />,
+    linkedin: <FaLinkedin />,
+    twitter: <FaTwitter />,
+    website: <FaLink />
+};
 import axios from "axios";
 import EditMember from "@/components/Teams/EditMember";
 
@@ -48,44 +48,51 @@ const TeamCard = ({ team, onDelete, onEdit }) => {
 
     return (
         <>
-            <Card maxW="sm">
-                <CardBody>
-                    <img
-                        src={team.pictureUrl}
-                        alt={team.name}
-                        className="rounded-full border-2 border-solid border-htb-green/50  p-1 w-40 h-40 bg-cover bg-center object-cover brightness-125"
+            <div className="bg-light-background-dark dark:bg-dark-background-light dark:text-dark-color text-light-color flex flex-col items-center py-8 mx-2 mt-3 transition duration-300 px-0 w-auto rounded-3xl relative group">
+                <div className="pb-3 text-center">
+                    <Badge
+                        status={`Current : ${team.isCurrent ? "Yes" : "No"}`}
+                        variant={team.isCurrent ? "success" : "error"}
                     />
-                    <Stack mt="6" spacing="3">
-                        <Heading size="md">{team.name}</Heading>
-                        <Text>{team.caption}</Text>
-                        <Text color="blue.600" fontSize="lg">
-                            Domain: {team.domain}
-                        </Text>
-                        <Text color="gray.600" fontSize="sm">
-                            Position: {team.position}
-                        </Text>
-                    </Stack>
-                </CardBody>
-                <Divider />
-                <CardFooter className="flex-col gap-2">
-                    <ul>
+                </div>
+                <img
+                    src={team.pictureUrl}
+                    alt={team.name}
+                    className="rounded-full border-2 border-solid dark:border-light-accent/50 border-light-color/50 p-1 w-36 h-36 bg-cover bg-center object-cover brightness-125 transition duration-300 dark:group-hover:shadow-[0_0_2px_#8bef00,inset_0_0_2px_#8bef00,0_0_5px_#8bef00,0_0_15px_#8bef00]"
+                />
+                <span className="text-2xl pt-5 dark:text-dark-accent text-light-color font-semibold text-center">
+                    {team.name}{" "}
+                </span>
+                <span className="text-lg dark:text-dark-accent text-light-color font-mono text-center">
+                    {team.domain}
+                </span>
+                <span className="text-lg pt-1 dark:text-dark-color text-light-color font-normal text-center">
+                    {team.position}
+                </span>
+                <span className="text-md text-center break-words w-64 dark:text-dark-color text-light-color">
+                    {team.caption}
+                </span>
+                <div className="flex-col gap-2">
+                    <div className="flex gap-3 justify-center">
                         {Object.entries(socials).map(
                             ([platform, url], index) => (
-                                <li key={index}>
+                                <div key={index}>
                                     <Tooltip
                                         label={url}
                                         placement="top"
                                         hasArrow
                                     >
-                                        <Button size="sm" variant="outline">
-                                            {platform.charAt(0).toUpperCase() +
-                                                platform.slice(1)}
-                                        </Button>
+                                        <a
+                                            href={url}
+                                            className=" hover:bg-htb-green hover:text-black ease-linear duration-150 rounded-full p-1 text-2xl"
+                                        >
+                                            {socialIcons[platform]}
+                                        </a>
                                     </Tooltip>
-                                </li>
+                                </div>
                             )
                         )}
-                    </ul>
+                    </div>
                     <ButtonGroup spacing="2">
                         <Button colorScheme="blue" onClick={onOpen}>
                             Edit
@@ -94,9 +101,8 @@ const TeamCard = ({ team, onDelete, onEdit }) => {
                             Delete
                         </Button>
                     </ButtonGroup>
-                </CardFooter>
-            </Card>
-
+                </div>
+            </div>
             <EditMember
                 isOpen={isOpen}
                 onClose={onClose}
