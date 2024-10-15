@@ -240,8 +240,8 @@ const Recruitment = () => {
     }
 
     return (
-        <Box p={5}>
-            <Heading size="lg" mb={4}>
+        <div className="bg-light-background-darker dark:bg-dark-background-darker dark:text-dark-accent text-light-color" >
+            <Heading className="text-center pt-2" size="lg" mb={4}>
                 Recruitment Data Statistics
             </Heading>
             <Text fontSize="lg" textAlign="center" fontWeight="bold" mb={4}>
@@ -365,7 +365,7 @@ const Recruitment = () => {
                         Displaying {filteredData.length} record{filteredData.length !== 1 ? 's' : ''} after filtering.
                     </Text>
 
-                    <Table variant="striped" colorScheme="gray">
+                    <Table variant="simple">
                         <Thead>
                             <Tr>
                                 <Th>Name</Th>
@@ -429,7 +429,7 @@ const Recruitment = () => {
                     </Table>
                 </Box>
             )}
-        </Box>
+        </div>
     );
 };
 

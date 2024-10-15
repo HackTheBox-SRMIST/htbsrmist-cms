@@ -32,7 +32,7 @@ const ParticipantModal = ({ participant, onClose, onSave, onChange }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center overflow-scroll">
             <div className="bg-white p-6 rounded-lg shadow-lg w-80">
                 <h3 className="text-xl font-bold mb-4">Edit Participant</h3>
 

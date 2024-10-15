@@ -89,7 +89,7 @@ const QRScannerModal = ({ onClose }) => {
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-75">
-            <div className="bg-white p-6 rounded-lg shadow-lg relative max-w-md w-full">
+            <div className="bg-light-background-darker dark:bg-dark-background-darker p-6 rounded-lg shadow-lg relative max-w-md w-full">
                 <button
                     className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl font-bold"
                     onClick={onClose}
@@ -99,15 +99,15 @@ const QRScannerModal = ({ onClose }) => {
                 </button>
 
                 {scanning ? (
-                    <div>
+                    <div className="">
                         <video
                             ref={videoRef}
-                            className="w-full h-auto mb-4 rounded"
+                            className="w-full  h-auto mb-4 rounded"
                         />
-                        <p className="text-gray-600 text-center">
+                        <p className="dark:text-dark-info-color text-light-info-color  text-center">
                             Scanning for QR codes...
                         </p>
-                        <p className="text-sm text-gray-400 text-center">
+                        <p className="text-sm dark:text-dark-error-color text-light-error-color  text-center">
                             Please ensure camera permissions are granted.
                         </p>
                     </div>

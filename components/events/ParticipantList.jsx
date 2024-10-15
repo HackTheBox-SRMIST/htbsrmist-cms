@@ -1,3 +1,5 @@
+import Badge from "../shared/Badge";
+
 // @/components/events/ParticipantList.js
 const ParticipantList = ({ participants, onClickParticipant }) => (
     <div className="space-y-4">
@@ -5,56 +7,55 @@ const ParticipantList = ({ participants, onClickParticipant }) => (
             participants.map((participant) => (
                 <div
                     key={participant._id}
-                    className="bg-white shadow-lg rounded-lg p-4 flex-col items-center justify-between cursor-pointer"
+                    className="bg-light-background-light dark:bg-dark-info-background shadow-lg rounded-lg p-4 flex-col items-center justify-between cursor-pointer"
                     onClick={() => onClickParticipant(participant)}
                 >
                     <div>
-                        <h3 className="text-sm font-bold text-black">
+                        <h3 className="text-lg font-bold dark:text-dark-info-color text-light-info-color">
                             {participant.name}
                         </h3>
-                        <p className="text-gray-600 text-sm">
+                        <p className="dark:text-dark-color text-light-color text-sm">
                             {participant.email}
                         </p>
-                        <p className="text-gray-600 text-sm">
+                        <p className="dark:text-dark-color text-light-color text-sm">
                             {participant.usn}
                         </p>
-                        <p className="text-gray-600 text-sm">
+                        <p className="dark:text-dark-color text-light-color text-sm">
                             {participant.department}
                         </p>
                     </div>
-                    <div className="flex space-x-4">
-                        <p
-                            className={`text-sm ${
-                                participant.rsvp
-                                    ? "text-green-500"
-                                    : "text-red-500"
+                    <div className="flex space-x-4 mt-2">
+                        <Badge
+                            status={`RSVP: ${
+                                participant.rsvp === "yes" ? "Yes" : "No"
                             }`}
-                        >
-                            RSVP: {participant.rsvp ? "Yes" : "No"}
-                        </p>
-                        <p
-                            className={`text-sm ${
-                                participant.checkin
-                                    ? "text-green-500"
-                                    : "text-red-500"
+                            variant={
+                                participant.rsvp === "yes" ? "success" : "error"
+                            }
+                        />
+                        <Badge
+                            status={`Check-in: ${
+                                participant.checkin ? "Yes" : "No"
                             }`}
-                        >
-                            Check-in: {participant.checkin ? "Yes" : "No"}
-                        </p>
-                        <p
-                            className={`text-sm ${
-                                participant.snacks
-                                    ? "text-green-500"
-                                    : "text-red-500"
+                            variant={participant.checkin ? "success" : "error"}
+                        />
+                        <Badge
+                            status={`Snacks: ${
+                                participant.snacks ? "Yes" : "No"
                             }`}
-                        >
-                            Snacks: {participant.snacks ? "Yes" : "No"}
-                        </p>
+                            variant={participant.snacks ? "success" : "error"}
+                        />
                     </div>
                 </div>
             ))
         ) : (
-            <p>No participants registered yet.</p>
+            <div className="flex justify-center items-center col-span-full">
+            <div className="dark:bg-dark-error-background bg-light-error-background py-6 px-10 rounded-xl">
+                <p className="dark:text-dark-error-color text-light-error-color text-center">
+                No participants
+                </p>
+            </div>
+        </div>
         )}
     </div>
 );
