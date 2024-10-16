@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
 import {
     Modal,
     ModalOverlay,
@@ -23,12 +24,29 @@ const EditModal = ({ isOpen, onClose, team, onEdit }) => {
     const [formData, setFormData] = useState({ ...team });
     const toast = useToast();
 
+    useEffect(() => {
+        if (isOpen) {
+            setFormData({ ...team }); 
+        }
+    }, [isOpen, team]);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value
-        }));
+        if (name.startsWith("socials.")) {
+            const key = name.split(".")[1];
+            setFormData((prevData) => ({
+                ...prevData,
+                socials: {
+                    ...prevData.socials,
+                    [key]: value
+                }
+            }));
+        } else {
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: value
+            }));
+        }
     };
 
     const handleSubmit = async () => {
