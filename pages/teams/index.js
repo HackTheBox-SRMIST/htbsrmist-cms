@@ -15,6 +15,7 @@ import TeamCard from "@/components/Teams/Card";
 import AddNew from "@/components/Teams/AddNew";
 import withAuth from "@/components/withAuth";
 import LoadingSpinner from "@/components/shared/Loading";
+import SearchBar from "@/components/shared/SearchBar";
 
 const TeamPage = () => {
     const [teams, setTeams] = useState([]);
@@ -23,6 +24,7 @@ const TeamPage = () => {
     const [isCurrent, setIsCurrent] = useState(true);
     const [isFiltering, setIsFiltering] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
     const toast = useToast();
 
     const fetchTeams = async () => {
@@ -79,6 +81,13 @@ const TeamPage = () => {
                 <h1 className="text-3xl font-bold text-start px-2 pt-4 mb-8">
                     Team Page
                 </h1>
+                <div className="px-2 mb-6">
+                    <SearchBar 
+                        placeholder="Search members by name..." 
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                    />
+                </div>
                 <div className="px-2">
                 <AddNew onSuccess={handleAddTeam} />
                 </div>
@@ -150,7 +159,18 @@ const TeamPage = () => {
                         gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))"
                         gap={4}
                     >
-                        {teams.map((team) => (
+                        {teams
+                        .filter(team => {
+                            if (!searchQuery) {
+                                return true;
+                            }
+                            const nameMatch = team.name?.toLowerCase().includes(searchQuery.toLowerCase());
+                            const memberMatch = team.members?.some(member => 
+                                member.name?.toLowerCase().includes(searchQuery.toLowerCase())
+                            );
+                            return nameMatch || memberMatch;
+                        })
+                        .map((team) => (
                             <TeamCard
                                 key={team.usn}
                                 team={team}
