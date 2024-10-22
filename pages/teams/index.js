@@ -81,16 +81,18 @@ const TeamPage = () => {
                 <h1 className="text-3xl font-bold text-start px-2 pt-4 mb-8">
                     Team Page
                 </h1>
-                <div className="px-2 mb-6">
+                <div className="px-2 mb-6 flex items-center gap-4">
                     <SearchBar 
+                        className="flex-grow mr-0" 
                         placeholder="Search members by name..." 
                         value={searchQuery}
                         onChange={setSearchQuery}
                     />
+                    <div className="relative" style={{ top: '-12px' }}>
+                        <AddNew onSuccess={handleAddTeam} />
+                    </div>
                 </div>
-                <div className="px-2">
-                <AddNew onSuccess={handleAddTeam} />
-                </div>
+
                 <div className="flex flex-col md:flex-row justify-evenly gap-4 items-center py-8 my-8 bg-light-success-background dark:bg-[#777c78] rounded-2xl ">
                     <div className="w-[80%] md:w-[30%]">
                         <FormControl>
@@ -161,7 +163,7 @@ const TeamPage = () => {
                     >
                         {teams
                         .filter(team => {
-                            if (!searchQuery) {
+                            if (!searchQuery) { 
                                 return true;
                             }
                             const nameMatch = team.name?.toLowerCase().includes(searchQuery.toLowerCase());

@@ -44,7 +44,7 @@ const SearchBar = ({
             dark:hover:shadow-[0_0_16px_rgba(159,239,0,0.4)]
             ${
               isFocused 
-                ? 'shadow-[0_0_16px_rgba(0,0,0,0.2)] dark:shadow-[0_0_16px_rgba(159,239,0,0.8)] border-gray-200 dark:border-[rgba(159,239,0,0.3)]'
+                ? 'shadow-[0_0_16px_rgba(0,0,0,0.3)] dark:shadow-[0_0_16px_rgba(159,239,0,0.4)] border-gray-200 dark:border-[rgba(159,239,0,0.3)]'
                 : ''
             }
           `}
