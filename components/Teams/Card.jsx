@@ -4,22 +4,35 @@ import {
     Button,
     Tooltip,
     useToast,
-    useDisclosure
+    useDisclosure,
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogContent,
+    AlertDialogOverlay,
 } from "@chakra-ui/react";
 import Badge from "@/components/shared/Badge";
 import { FaGithub, FaLink, FaLinkedin, FaTwitter } from "react-icons/fa";
+import axios from "axios";
+import EditMember from "@/components/Teams/EditMember";
+
 const socialIcons = {
     github: <FaGithub />,
     linkedin: <FaLinkedin />,
     twitter: <FaTwitter />,
     website: <FaLink />
 };
-import axios from "axios";
-import EditMember from "@/components/Teams/EditMember";
 
 const TeamCard = ({ team, onDelete, onEdit }) => {
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const {
+        isOpen: isDeleteOpen,
+        onOpen: onDeleteOpen,
+        onClose: onDeleteClose
+    } = useDisclosure();
+    const cancelRef = React.useRef();
 
     const handleDelete = async () => {
         try {
@@ -32,6 +45,7 @@ const TeamCard = ({ team, onDelete, onEdit }) => {
                 isClosable: true
             });
             onDelete(team.usn);
+            onDeleteClose();
         } catch (error) {
             console.error("Error deleting team member:", error);
             toast({
@@ -84,7 +98,7 @@ const TeamCard = ({ team, onDelete, onEdit }) => {
                                     >
                                         <a
                                             href={url}
-                                            className=" hover:bg-htb-green hover:text-black ease-linear duration-150 rounded-full p-1 text-2xl"
+                                            className="hover:bg-htb-green hover:text-black ease-linear duration-150 rounded-full p-1 text-2xl"
                                         >
                                             {socialIcons[platform]}
                                         </a>
@@ -97,12 +111,56 @@ const TeamCard = ({ team, onDelete, onEdit }) => {
                         <Button colorScheme="blue" onClick={onOpen}>
                             Edit
                         </Button>
-                        <Button colorScheme="red" onClick={handleDelete}>
+                        <Button colorScheme="red" onClick={onDeleteOpen}>
                             Delete
                         </Button>
                     </ButtonGroup>
                 </div>
             </div>
+
+            <AlertDialog
+                isOpen={isDeleteOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={onDeleteClose}
+                isCentered
+            >
+                <AlertDialogOverlay>
+                    <AlertDialogContent
+                        
+                        className="bg-light-background-dark dark:bg-dark-background-light"
+                    >
+                        <AlertDialogHeader
+                            className="dark:text-dark-accent text-light-color font-semibold"
+                        >
+                            Delete Team Member
+                        </AlertDialogHeader>
+
+                        <AlertDialogBody
+                            className="dark:text-light-color text-light-color"
+                        >
+                            Are you sure you want to delete {team.name}? This action cannot be undone.
+                        </AlertDialogBody>
+
+                        <AlertDialogFooter>
+                            <Button
+                                ref={cancelRef}
+                                onClick={onDeleteClose}
+                                className="bg-light-background dark:bg-dark-background text-light-color dark:text-dark-accent"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                colorScheme="red"
+                                onClick={handleDelete}
+                                ml={3}
+                            >
+                                Delete
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
+
             <EditMember
                 isOpen={isOpen}
                 onClose={onClose}
