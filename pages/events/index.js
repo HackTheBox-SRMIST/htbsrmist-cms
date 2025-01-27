@@ -4,6 +4,7 @@ import Link from "next/link";
 import withAuth from "@/components/withAuth";
 import LoadingSpinner from "@/components/shared/Loading";
 import Badge from "@/components/shared/Badge";
+import AddEvent from "@/components/events/AddEvent";
 
 const Events = () => {
     const [currentEvents, setCurrentEvents] = useState([]);
@@ -52,12 +53,19 @@ const Events = () => {
         fetchEvents();
     }, []);
 
+    const handleAddEvent = () => {
+        fetchEvents();
+    };
+
     if (loading) {
         return <LoadingSpinner />;
     }
 
     return (
         <div className="bg-light-background-darker dark:bg-dark-background-darker px-4 py-8 ">
+           <div className="relative" style={{ top: '-12px' }}>
+                <AddEvent onSuccess={handleAddEvent} />
+            </div>
             <h1 className="text-3xl font-bold text-center mb-8 dark:text-dark-accent text-light-color">
                 Current Events
             </h1>

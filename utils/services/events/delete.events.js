@@ -1,4 +1,4 @@
-import Event from "@/utils/models/events.model";
+import Event from "@/utils/models/event.models";
 
 async function deleteEvent(slug, res) {
     try {

@@ -1,4 +1,4 @@
-import Event from "@/utils/models/events.model";
+import Event from "@/utils/models/event.models";
 
 async function updateEvent(slug, req, res) {
     try {

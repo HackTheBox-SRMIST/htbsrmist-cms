@@ -1,15 +1,14 @@
-import Event from "@/utils/models/events.model";
+import Event from "@/utils/models/event.models";
 
-async function getAllEvents(res) {
+async function getAllEvents(req, res) {
     try {
         const events = await Event.find();
-
         res.status(200).json({ success: true, data: events });
     } catch (error) {
         console.error(error);
         res.status(500).json({
             success: false,
-            error: "Internal Server Error"
+            error: "Internal Server Error",
         });
     }
 }
