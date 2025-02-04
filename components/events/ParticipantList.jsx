@@ -27,10 +27,10 @@ const ParticipantList = ({ participants, onClickParticipant }) => (
                     <div className="flex space-x-4 mt-2">
                         <Badge
                             status={`RSVP: ${
-                                participant.rsvp === "yes" ? "Yes" : "No"
+                                participant.rsvp ? "Yes" : "No"
                             }`}
                             variant={
-                                participant.rsvp === "yes" ? "success" : "error"
+                                participant.rsvp ? "success" : "error"
                             }
                         />
                         <Badge
