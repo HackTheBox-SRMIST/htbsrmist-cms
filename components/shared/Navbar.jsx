@@ -29,7 +29,7 @@ const Navbar = () => {
         <nav className="flex flex-row justify-between overflow-auto overflow-y-hidden dark:bg-dark-background-normal bg-light-background-dark p-6">
             <div className="container mx-auto flex justify-between items-center">
                 <h3 className="lg:text-xl text-2xl dark:text-dark-accent text-light-color  font-bold">
-                    HTBSRMIST
+                    HTBCHENNAI
                 </h3>
                 <ul className="md:flex flex-row flex-nowrap hidden items-center space-x-6 text-light-color dark:text-dark-color">
                     {isLoggedIn ? (
