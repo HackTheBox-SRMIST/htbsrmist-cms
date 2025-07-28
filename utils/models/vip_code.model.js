@@ -19,5 +19,5 @@ const vipCodeSchema = new mongoose.Schema({
 })
 
 
-const VipCodes = mongoose.models.vipCodeSchema || mongoose.model("vip_codes", vipCodeSchema);
-export default VipCodes;
+const VipCode = mongoose.models.vipCodeSchema || mongoose.model("vip_codes", vipCodeSchema);
+export default VipCode;
