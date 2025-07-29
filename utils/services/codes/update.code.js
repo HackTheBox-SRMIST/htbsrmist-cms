@@ -4,9 +4,10 @@ import VipCode from "@/utils/models/vip_code.model";
 
 async function updateVipCodeStatus(code, req, res) {
     try {
+        const { isValid } = req.body;
         const vip_code = await VipCode.findOneAndUpdate(
             { code: code },
-            req.body,
+            { isValid: isValid },
             {
                 new: true,
                 runValidators: true
