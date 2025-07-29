@@ -58,7 +58,9 @@ export default function Home() {
                 {!isLoggedIn ? (
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div>
-                        <h1 className="lg:text-xl text-2xl dark:text-dark-color text-light-color  font-bold text-center mb-6">Login</h1>
+                            <h1 className="lg:text-xl text-2xl dark:text-dark-color text-light-color  font-bold text-center mb-6">
+                                Login
+                            </h1>
                             <label className="block text-sm font-medium dark:text-dark-accent text-light-color pb-2">
                                 Username:
                             </label>
@@ -109,6 +111,12 @@ export default function Home() {
                             className="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded-lg"
                         >
                             Go to Recruitments
+                        </button>
+                        <button
+                            onClick={() => handleRedirect("/codes")}
+                            className="w-full bg-yellow-600 hover:bg-yellow-500 text-white py-2 px-4 rounded-lg"
+                        >
+                            Manage VIP+ Codes
                         </button>
                     </div>
                 )}
