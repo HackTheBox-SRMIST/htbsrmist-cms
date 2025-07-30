@@ -1,4 +1,7 @@
 import updateVipCodeStatus from "@/utils/services/codes/update.code";
+import DBInstance from "@/utils/db";
+
+DBInstance();
 
 function updateVipCodeHandler(req, res) {
     if (req.method === "POST") {

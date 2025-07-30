@@ -1,4 +1,7 @@
 import getAllCodes from "@/utils/services/codes/getAll.code";
+import DBInstance from "@/utils/db";
+
+DBInstance();
 
 async function getCodes(req, res) {
     if (req.method === "GET") {
