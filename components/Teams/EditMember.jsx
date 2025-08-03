@@ -186,6 +186,15 @@ const EditModal = ({ isOpen, onClose, team, onEdit }) => {
                             />
                         </FormControl>
                         <FormControl>
+                            <FormLabel>SRM Mail ID</FormLabel>
+                            <Input
+                                name="socials.srmMailID"
+                                value={formData.socials.srmMailID}
+                                onChange={handleInputChange}
+                            />
+                        </FormControl>
+                        
+                        <FormControl>
                             <FormLabel>Current Member</FormLabel>
                             <RadioGroup
                                 name="isCurrent"
