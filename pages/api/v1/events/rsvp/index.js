@@ -35,16 +35,49 @@ export default async function handler(req, res) {
 
             if (rsvpCount >= rsvpLimit) {
                 return res.status(200).send(`
-                    <html>
-                        <head>
-                            <title>RSVP Limit Reached</title>
-                        </head>
-                        <body style="text-align:center; font-family:Arial, sans-serif;">
-                            <h1>All Seats Are Full</h1>
-                            <p>We have reached the maximum number of RSVPs for the event: <strong>${event.event_name}</strong>.</p>
-                            <p>Please keep an eye on our social media for updates if more seats are released.</p>
-                        </body>
-                    </html>
+    <html>
+        <head>
+            <title>RSVP Limit Reached</title>
+            <style>
+                body {
+                    background-color: var(--background-normal);
+                    color: var(--color);
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                    padding: 20px;
+                }
+                h1 {
+                    color: var(--error-color);
+                    font-size: 2rem;
+                    margin-bottom: 1rem;
+                }
+                p {
+                    font-size: 1rem;
+                    line-height: 1.5;
+                    margin-bottom: 1rem;
+                }
+                strong {
+                    color: var(--accent);
+                }
+                .container {
+                    background-color: var(--background-light);
+                    border: 1px solid var(--background-dark);
+                    border-radius: 8px;
+                    padding: 20px;
+                    max-width: 600px;
+                    margin: 50px auto;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>All Seats Are Full</h1>
+                <p>We have reached the maximum number of RSVPs for the event: <strong>${event.event_name}</strong>.</p>
+                <p>Please keep an eye on our social media for updates if more seats are released.</p>
+            </div>
+        </body>
+    </html>
                 `);
             }
 
@@ -57,16 +90,57 @@ export default async function handler(req, res) {
 
             if (existingParticipant.rsvp) {
                 return res.status(200).send(`
-                    <html>
-                        <head>
-                            <title>RSVP Already Confirmed</title>
-                        </head>
-                        <body style="text-align:center; font-family:Arial, sans-serif;">
-                            <h1>RSVP Already Confirmed</h1>
-                            <p>You have already RSVPd for the event: <strong>${event.event_name}</strong>.</p>
-                            <p>If you need to make changes or have questions, please contact us at community@htbsrmist.tech.</p>
-                        </body>
-                    </html>
+    <html>
+        <head>
+            <title>RSVP Already Confirmed</title>
+            <style>
+                body {
+                    background-color: var(--background-normal);
+                    color: var(--color);
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                    padding: 20px;
+                }
+                h1 {
+                    color: var(--accent);
+                    font-size: 2rem;
+                    margin-bottom: 1rem;
+                }
+                p {
+                    font-size: 1rem;
+                    line-height: 1.5;
+                    margin-bottom: 1rem;
+                }
+                strong {
+                    color: var(--success-color);
+                }
+                a {
+                    color: var(--info-color);
+                    text-decoration: none;
+                    font-weight: bold;
+                }
+                a:hover {
+                    text-decoration: underline;
+                }
+                .container {
+                    background-color: var(--background-light);
+                    border: 1px solid var(--background-dark);
+                    border-radius: 8px;
+                    padding: 20px;
+                    max-width: 600px;
+                    margin: 50px auto;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>RSVP Already Confirmed</h1>
+                <p>You have already RSVPd for the event: <strong>${event.event_name}</strong>.</p>
+                <p>If you need to make changes or have questions, please contact us at <a href="mailto:community@htbchennai.in">community@htbchennai.in</a>.</p>
+            </div>
+        </body>
+    </html>
                 `);
             }
 
@@ -110,15 +184,50 @@ export default async function handler(req, res) {
             );
 
             res.status(200).send(`
-                <html>
-                    <head>
-                        <title>RSVP Confirmation</title>
-                    </head>
-                    <body style="text-align:center; font-family:Arial, sans-serif;">
-                        <h1>Thank you for RSVPing!</h1>
-                        <p>Your RSVP has been confirmed. Please check your email for the event ticket QR code.</p>
-                    </body>
-                </html>
+    <html>
+        <head>
+            <title>RSVP Confirmation</title>
+            <style>
+                body {
+                    background-color: var(--background-normal);
+                    color: var(--color);
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                    padding: 20px;
+                }
+                h1 {
+                    color: var(--accent);
+                    font-size: 2rem;
+                    margin-bottom: 1rem;
+                }
+                p {
+                    font-size: 1rem;
+                    line-height: 1.5;
+                    margin-bottom: 1rem;
+                }
+                .container {
+                    background-color: var(--background-light);
+                    border: 1px solid var(--background-dark);
+                    border-radius: 8px;
+                    padding: 20px;
+                    max-width: 600px;
+                    margin: 50px auto;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .highlight {
+                    color: var(--success-color);
+                    font-weight: bold;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Thank you for RSVPing!</h1>
+                <p>Your RSVP has been confirmed for the event: <span class="highlight">${event.event_name}</span>.</p>
+                <p>Please check your email for the event ticket QR code.</p>
+            </div>
+        </body>
+    </html>
             `);
         } catch (error) {
             console.error("Error updating participant:", error);
