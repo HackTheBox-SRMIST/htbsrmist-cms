@@ -13,9 +13,9 @@ const DBInstance = async () => {
             dbName: NEXT_PUBLIC_DB_NAME
         });
 
-        // console.log(`✅ Connected to MongoDB: ${NEXT_PUBLIC_DB_NAME}`);
+        console.log(`✅ Connected to MongoDB: ${NEXT_PUBLIC_DB_NAME}`);
     } catch (err) {
-        // console.error("❌ Could not connect to MongoDB\n", err.message);
+        console.error("❌ Could not connect to MongoDB\n", err.message);
         throw err;
     }
 };

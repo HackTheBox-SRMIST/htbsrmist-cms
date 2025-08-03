@@ -37,7 +37,8 @@ const AddNew = ({ onSuccess }) => {
             github: "",
             website: "",
             linkedin: "",
-            twitter: ""
+            twitter: "",
+            srmMailID: ""
         }
     });
 
@@ -228,6 +229,12 @@ const AddNew = ({ onSuccess }) => {
                                         name="socials.twitter"
                                         placeholder="Twitter URL"
                                         value={formData.socials.twitter}
+                                        onChange={handleChange}
+                                    />
+                                    <Input
+                                        name="socials.srmMailID"
+                                        placeholder="SRM Mail ID"
+                                        value={formData.socials.srmMailID}
                                         onChange={handleChange}
                                     />
                                 </Stack>
