@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const vipCodeSchema = new mongoose.Schema({
     index: {
         type: Number,
-        required: true
+        required: true,
+        unique: true
     },
 
     code: {
