@@ -13,7 +13,7 @@ const RecruitmentSchema = new mongoose.Schema({
     status: String,
     passKey: String
 }, {
-    collection: 'recruitment24v2'  // Explicitly specify the collection name
+    collection: 'recruitment25'  // Explicitly specify the collection name
 });
 
 export const Recruitment = mongoose.models.Recruitment || mongoose.model('Recruitment', RecruitmentSchema);
