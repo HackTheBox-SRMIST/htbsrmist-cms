@@ -70,9 +70,36 @@ const VipCodesPage = () => {
                 <AlertComponent
                     key="no-codes-alert"
                     status="warning"
-                    message="No Codes are retrieved yet"
+                    message="No Codes are added yet"
                 />
             ]);
+            try {
+                await axios.post("/api/v1/codes/create", {
+                    index: 0,
+                    code: user_input,
+                    isValid: true
+                });
+                setAlerts((prevAlerts) => [
+                    ...prevAlerts,
+                    <AlertComponent
+                        key="add-success-alert"
+                        status="success"
+                        message="Code added successfully"
+                    />
+                ]);
+                document.querySelector("#add-code").value = "";
+                setRefetch(true);
+            } catch (err) {
+                console.error(err);
+                setAlerts((prevAlerts) => [
+                    ...prevAlerts,
+                    <AlertComponent
+                        key="add-failure-alert"
+                        status="error"
+                        message="An error occurred"
+                    />
+                ]);
+            }
         } else if (user_input === "") {
             setAlerts((prevAlerts) => [
                 ...prevAlerts,
