@@ -28,11 +28,10 @@ const AddNew = ({ onSuccess }) => {
         usn: "",
         name: "",
         domain: "",
-        position: "",
         caption: "",
-        joined: "",
         pictureUrl: "",
         isCurrent: true,
+        status: [{ position: "", joined: "" }],
         socials: {
             github: "",
             website: "",
@@ -55,14 +54,47 @@ const AddNew = ({ onSuccess }) => {
                     [socialKey]: value
                 }
             });
+        } else if (name.startsWith("status.")) {
+            const [, idxStr, key] = name.split(".");
+            const idx = Number(idxStr);
+            const next = [...formData.status];
+            next[idx] = {
+                ...next[idx],
+                [key]: key === "joined" ? value.replace(/[^0-9]/g, "") : value
+            };
+            setFormData({ ...formData, status: next });
         } else {
             setFormData({ ...formData, [name]: value });
         }
     };
 
+    const addStatusRow = () => {
+        setFormData((prev) => ({
+            ...prev,
+            status: [...prev.status, { position: "", joined: "" }]
+        }));
+    };
+
+    const removeStatusRow = (i) => {
+        setFormData((prev) => ({
+            ...prev,
+            status: prev.status.filter((_, idx) => idx !== i)
+        }));
+    };
+
     const handleSubmit = async () => {
         try {
-            const response = await axios.post("/api/v1/teams", formData);
+            const payload = {
+                ...formData,
+                // coerce joined to numbers
+                status: (formData.status || [])
+                    .filter((s) => s.position && s.joined !== "")
+                    .map((s) => ({
+                        position: s.position,
+                        joined: Number(s.joined)
+                    }))
+            };
+            const response = await axios.post("/api/v1/teams", payload);
             // console.log("Form data:", formData);
             toast({
                 title: "Member added.",
@@ -150,26 +182,6 @@ const AddNew = ({ onSuccess }) => {
                             </FormControl>
 
                             <FormControl isRequired>
-                                <FormLabel htmlFor="position">
-                                    Position
-                                </FormLabel>
-                                <Select
-                                    id="position"
-                                    name="position"
-                                    placeholder="Select position"
-                                    value={formData.position}
-                                    onChange={handleChange}
-                                >
-                                    <option value="Root">Root</option>
-                                    <option value="Sudoer">Sudoer</option>
-                                    <option value="Sticky Bit">
-                                        Sticky Bit
-                                    </option>
-                                    <option value="Binary">Binary</option>
-                                </Select>
-                            </FormControl>
-
-                            <FormControl isRequired>
                                 <FormLabel htmlFor="caption">Caption</FormLabel>
                                 <Input
                                     id="caption"
@@ -179,18 +191,68 @@ const AddNew = ({ onSuccess }) => {
                                 />
                             </FormControl>
 
-                            <FormControl isRequired>
-                                <FormLabel htmlFor="joined">
-                                    Year Joined
-                                </FormLabel>
-                                <Input
-                                    id="joined"
-                                    name="joined"
-                                    type="number"
-                                    value={formData.joined}
-                                    onChange={handleChange}
-                                />
-                            </FormControl>
+                            <Stack spacing={3}>
+                                <FormLabel>Status history</FormLabel>
+                                {formData.status.map((row, i) => (
+                                    <Stack
+                                        direction={{
+                                            base: "column",
+                                            md: "row"
+                                        }}
+                                        spacing={3}
+                                        key={i}
+                                    >
+                                        <FormControl isRequired>
+                                            <FormLabel>Position</FormLabel>
+                                            <Select
+                                                name={`status.${i}.position`}
+                                                placeholder="Select position"
+                                                value={row.position}
+                                                onChange={handleChange}
+                                            >
+                                                <option value="Mainframe">
+                                                    Mainframe
+                                                </option>
+                                                <option value="Kernel">
+                                                    Kernel
+                                                </option>
+                                                <option value="Root">
+                                                    Root
+                                                </option>
+                                                <option value="Sudoer">
+                                                    Sudoer
+                                                </option>
+                                                <option value="Sticky Bit">
+                                                    Sticky Bit
+                                                </option>
+                                                <option value="Binary">
+                                                    Binary
+                                                </option>
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl isRequired>
+                                            <FormLabel>Year</FormLabel>
+                                            <Input
+                                                type="number"
+                                                name={`status.${i}.joined`}
+                                                value={row.joined}
+                                                onChange={handleChange}
+                                            />
+                                        </FormControl>
+                                        <Button
+                                            onClick={() => removeStatusRow(i)}
+                                            disabled={
+                                                formData.status.length <= 1
+                                            }
+                                        >
+                                            Remove
+                                        </Button>
+                                    </Stack>
+                                ))}
+                                <Button onClick={addStatusRow}>
+                                    Add status
+                                </Button>
+                            </Stack>
 
                             <FormControl isRequired>
                                 <FormLabel htmlFor="pictureUrl">

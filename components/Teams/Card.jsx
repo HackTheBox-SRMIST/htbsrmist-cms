@@ -10,7 +10,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogContent,
-    AlertDialogOverlay,
+    AlertDialogOverlay
 } from "@chakra-ui/react";
 import Badge from "@/components/shared/Badge";
 import { FaGithub, FaLink, FaLinkedin, FaTwitter } from "react-icons/fa";
@@ -81,7 +81,15 @@ const TeamCard = ({ team, onDelete, onEdit }) => {
                     {team.domain}
                 </span>
                 <span className="text-lg pt-1 dark:text-dark-color text-light-color font-normal text-center">
-                    {team.position}
+                    {(Array.isArray(team.status) && team.status.length > 0
+                        ? team.status.reduce(
+                              (acc, s) =>
+                                  !acc || (s?.joined ?? 0) > (acc?.joined ?? 0)
+                                      ? s
+                                      : acc,
+                              null
+                          )?.position
+                        : team.position) || ""}
                 </span>
                 <span className="text-md text-center break-words w-64 dark:text-dark-color text-light-color">
                     {team.caption}
@@ -125,20 +133,14 @@ const TeamCard = ({ team, onDelete, onEdit }) => {
                 isCentered
             >
                 <AlertDialogOverlay>
-                    <AlertDialogContent
-                        
-                        className="bg-light-background-dark dark:bg-dark-background-light"
-                    >
-                        <AlertDialogHeader
-                            className="dark:text-dark-accent text-light-color font-semibold"
-                        >
+                    <AlertDialogContent className="bg-light-background-dark dark:bg-dark-background-light">
+                        <AlertDialogHeader className="dark:text-dark-accent text-light-color font-semibold">
                             Delete Team Member
                         </AlertDialogHeader>
 
-                        <AlertDialogBody
-                            className="dark:text-light-color text-light-color"
-                        >
-                            Are you sure you want to delete {team.name}? This action cannot be undone.
+                        <AlertDialogBody className="dark:text-light-color text-light-color">
+                            Are you sure you want to delete {team.name}? This
+                            action cannot be undone.
                         </AlertDialogBody>
 
                         <AlertDialogFooter>

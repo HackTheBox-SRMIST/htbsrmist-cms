@@ -20,9 +20,10 @@ const teamsSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    // Deprecated: use status[].position instead
     position: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     caption: {
@@ -30,10 +31,24 @@ const teamsSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    // Deprecated: use status[].joined instead
     joined: {
         type: Number,
-        required: true
+        required: false
     },
+    status: [
+        {
+            position: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            joined: {
+                type: Number,
+                required: true
+            }
+        }
+    ],
     pictureUrl: {
         type: String,
         required: true,

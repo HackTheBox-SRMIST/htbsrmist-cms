@@ -2,7 +2,21 @@ import Team from "@/utils/models/teams.model";
 
 async function updateTeams(usn, req, res) {
     try {
-        const team = await Team.findOneAndUpdate({ usn: usn }, req.body, {
+        const update = { ...req.body };
+        if (!Array.isArray(update.status) || update.status.length === 0) {
+            if (update.position && update.joined) {
+                update.status = [
+                    { position: update.position, joined: Number(update.joined) }
+                ];
+            }
+        } else {
+            update.status = update.status.map((s) => ({
+                position: String(s.position),
+                joined: Number(s.joined)
+            }));
+        }
+
+        const team = await Team.findOneAndUpdate({ usn: usn }, update, {
             new: true,
             runValidators: true
         });

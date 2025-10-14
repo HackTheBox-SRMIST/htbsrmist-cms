@@ -46,7 +46,7 @@ const TeamPage = () => {
                 duration: 5000,
                 isClosable: true
             });
-        }finally {
+        } finally {
             setLoading(false);
         }
     };
@@ -82,13 +82,13 @@ const TeamPage = () => {
                     Team Page
                 </h1>
                 <div className="px-2 mb-6 flex items-center gap-4">
-                    <SearchBar 
-                        className="flex-grow mr-0" 
-                        placeholder="Search members by name..." 
+                    <SearchBar
+                        className="flex-grow mr-0"
+                        placeholder="Search members by name..."
                         value={searchQuery}
                         onChange={setSearchQuery}
                     />
-                    <div className="relative" style={{ top: '-12px' }}>
+                    <div className="relative" style={{ top: "-12px" }}>
                         <AddNew onSuccess={handleAddTeam} />
                     </div>
                 </div>
@@ -162,24 +162,46 @@ const TeamPage = () => {
                         gap={4}
                     >
                         {teams
-                        .filter(team => {
-                            if (!searchQuery) { 
-                                return true;
-                            }
-                            const nameMatch = team.name?.toLowerCase().includes(searchQuery.toLowerCase());
-                            const memberMatch = team.members?.some(member => 
-                                member.name?.toLowerCase().includes(searchQuery.toLowerCase())
-                            );
-                            return nameMatch || memberMatch;
-                        })
-                        .map((team) => (
-                            <TeamCard
-                                key={team.usn}
-                                team={team}
-                                onDelete={handleDeleteTeam}
-                                onEdit={handleEditTeam}
-                            />
-                        ))}
+                            .filter((team) => {
+                                if (!searchQuery) {
+                                    return true;
+                                }
+                                const nameMatch = team.name
+                                    ?.toLowerCase()
+                                    .includes(searchQuery.toLowerCase());
+                                const memberMatch = team.members?.some(
+                                    (member) =>
+                                        member.name
+                                            ?.toLowerCase()
+                                            .includes(searchQuery.toLowerCase())
+                                );
+                                return nameMatch || memberMatch;
+                            })
+                            .filter((team) => {
+                                if (!position) return true;
+                                const latest =
+                                    Array.isArray(team.status) &&
+                                    team.status.length > 0
+                                        ? team.status.reduce(
+                                              (acc, s) =>
+                                                  !acc ||
+                                                  (s?.joined ?? 0) >
+                                                      (acc?.joined ?? 0)
+                                                      ? s
+                                                      : acc,
+                                              null
+                                          )
+                                        : { position: team.position };
+                                return (latest?.position || "") === position;
+                            })
+                            .map((team) => (
+                                <TeamCard
+                                    key={team.usn}
+                                    team={team}
+                                    onDelete={handleDeleteTeam}
+                                    onEdit={handleEditTeam}
+                                />
+                            ))}
                     </Box>
                 </Box>
             </div>
