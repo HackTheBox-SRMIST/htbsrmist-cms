@@ -72,7 +72,10 @@ const Recruitment = () => {
         name: true,
         email: true,
         reg_no: false,
-        ph_no: false
+        ph_no: false,
+        linkedin: false,
+        portfolio: false,
+        resume: false
     });
 
     const handleJsonFieldChange = useCallback((field) => {
