@@ -1,4 +1,6 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+
+const RECRUITMENT_DB = "htbsrmist";
 
 const RecruitmentSchema = new mongoose.Schema({
     usn: String,
@@ -13,7 +15,24 @@ const RecruitmentSchema = new mongoose.Schema({
     status: String,
     passKey: String
 }, {
-    collection: 'recruitment25v2'  // Explicitly specify the collection name
+    collection: 'recruitment26'
 });
 
-export const Recruitment = mongoose.models.Recruitment || mongoose.model('Recruitment', RecruitmentSchema);
+const getRecruitmentConnection = () => {
+    const existing = mongoose.connections.find(
+        (conn) => conn.name === RECRUITMENT_DB
+    );
+    if (existing) return existing;
+
+    return mongoose.createConnection(process.env.NEXT_PUBLIC_MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        dbName: RECRUITMENT_DB
+    });
+};
+
+const recruitmentConnection = getRecruitmentConnection();
+
+export const Recruitment =
+    recruitmentConnection.models.Recruitment ||
+    recruitmentConnection.model("Recruitment", RecruitmentSchema);
