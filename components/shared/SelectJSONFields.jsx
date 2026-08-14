@@ -24,7 +24,7 @@ const SelectJSONFields = ({ selectedJsonFields, handleJsonFieldChange }) => {
                                 isChecked={isSelected}
                                 onChange={() => handleJsonFieldChange(field)}
                             >
-                                {field === 'reg_no' ? 'Reg No' : field === 'ph_no' ? 'Phone No' : field.charAt(0).toUpperCase() + field.slice(1)}
+                                {field === 'reg_no' ? 'Reg No' : field === 'ph_no' ? 'Phone No' : field === 'linkedin' ? 'LinkedIn' : field.charAt(0).toUpperCase() + field.slice(1)}
                             </Checkbox>
                         </Box>
                     ))}

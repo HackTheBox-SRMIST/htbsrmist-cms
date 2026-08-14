@@ -10,6 +10,9 @@ const DownloadJSON = ({ filteredData, fileName = 'data', selectedJsonFields }) =
                 if (selectedJsonFields.email) jsonItem.email = item.email;
                 if (selectedJsonFields.reg_no) jsonItem.reg_no = item.usn;
                 if (selectedJsonFields.ph_no) jsonItem.ph_no = item.phone;
+                if (selectedJsonFields.linkedin) jsonItem.linkedin = item.linkedin;
+                if (selectedJsonFields.portfolio) jsonItem.portfolio = item.additionalLink;
+                if (selectedJsonFields.resume) jsonItem.resume = item.resume;
                 return jsonItem;
             }),
             null,
