@@ -9,6 +9,13 @@ const DownloadJSON = ({ filteredData, fileName = 'data', selectedJsonFields }) =
                 if (selectedJsonFields.name) jsonItem.name = item.name;
                 if (selectedJsonFields.email) jsonItem.email = item.email;
                 if (selectedJsonFields.reg_no) jsonItem.reg_no = item.usn;
+                if (selectedJsonFields.year) {
+                    const currentYear = new Date().getFullYear().toString().slice(-2);
+                    const usnYear = item.usn ? item.usn.substring(2, 4) : "";
+                    jsonItem.year = usnYear === currentYear ? "1st" : "2nd";
+                }
+                if (selectedJsonFields.domain1) jsonItem.domain1 = item.domain1;
+                if (selectedJsonFields.domain2) jsonItem.domain2 = item.domain2;
                 if (selectedJsonFields.ph_no) jsonItem.ph_no = item.phone;
                 if (selectedJsonFields.linkedin) jsonItem.linkedin = item.linkedin;
                 if (selectedJsonFields.portfolio) jsonItem.portfolio = item.additionalLink;
