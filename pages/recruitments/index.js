@@ -87,25 +87,7 @@ const Recruitment = () => {
         "Creatives"
     ], []);
 
-    const [selectedJsonFields, setSelectedJsonFields] = useState({
-        name: true,
-        email: true,
-        reg_no: false,
-        ph_no: false,
-        linkedin: false,
-        portfolio: false,
-        resume: false,
-        year: false,
-        domain1: false,
-        domain2: false
-    });
 
-    const handleJsonFieldChange = useCallback((field) => {
-        setSelectedJsonFields(prev => ({
-            ...prev,
-            [field]: !prev[field]
-        }));
-    }, []);
 
     const fetchData = useCallback(async () => {
         try {
@@ -404,7 +386,7 @@ const Recruitment = () => {
             <Text fontSize="lg" textAlign="center" fontWeight="bold" mb={4}>
                 Total Registrations: {recruitmentData.length}
             </Text>
-            <Flex justify="center" gap="10" textAlign="center" mb={4}>
+            <Flex justify="center" direction={{ base: "column", sm: "row" }} gap={{ base: 4, sm: 10 }} textAlign="center" mb={4}>
                 <Text fontSize="lg">
                     First Year: <strong>{yearCounts.firstYear}</strong>
                 </Text>
@@ -413,8 +395,8 @@ const Recruitment = () => {
                 </Text>
             </Flex>
 
-            <Flex justify="space-around" mb={8}>
-                <Box width="25%">
+            <Flex justify="space-around" direction={{ base: "column", md: "row" }} align="center" gap={{ base: 10, md: 4 }} mb={8}>
+                <Box width={{ base: "80%", md: "40%", lg: "25%" }}>
                     <Heading size="md" textAlign="center" mb={2}>
                         First Domain Preference
                     </Heading>
@@ -426,7 +408,7 @@ const Recruitment = () => {
                         }}
                     />
                 </Box>
-                <Box width="25%">
+                <Box width={{ base: "80%", md: "40%", lg: "25%" }}>
                     <Heading size="md" textAlign="center" mb={2}>
                         Second Domain Preference
                     </Heading>
@@ -448,10 +430,10 @@ const Recruitment = () => {
 
            
 
-            <Flex justify="space-between" mb={4} gap={8}>
+            <Flex direction={{ base: "column", xl: "row" }} justify="space-between" mb={4} gap={4}>
                 {showTable && (
                     <>  
-                        <Flex justify="left" gap={8} mb={4}>
+                        <Flex justify={{ base: "center", xl: "flex-start" }} wrap="wrap" gap={4} mb={{ base: 4, xl: 0 }}>
                             <Button
                                 colorScheme="green"
                                 onClick={handleDownloadCSV}
@@ -465,17 +447,13 @@ const Recruitment = () => {
                                 Download Excel
                             </Button>
                             <DownloadJSON
-                                filteredData={filteredData}
+                                data={filteredData}
                                 fileName="recruitment_data"
-                                selectedJsonFields={selectedJsonFields}
+                                filters={filters}
                             />
                         </Flex>
                         
-                        <Flex justify="right" gap={8}>
-                            <SelectJSONFields
-                                selectedJsonFields={selectedJsonFields}
-                                handleJsonFieldChange={handleJsonFieldChange}
-                            />  
+                        <Flex justify={{ base: "center", xl: "flex-end" }} wrap="wrap" gap={4}>
                             <Menu>
                                 <MenuButton as={Button} colorScheme="green">
                                     Filter Domain 1
@@ -534,8 +512,8 @@ const Recruitment = () => {
                         <Thead>
                             <Tr>
                                 <Th>Name</Th>
-                                <Th>Email</Th>
                                 <Th>Reg No</Th>
+                                <Th>Email</Th>
                                 <Th>Year</Th>
                                 <Th>Domain 1</Th>
                                 <Th>Domain 2</Th>
@@ -547,8 +525,8 @@ const Recruitment = () => {
                             {filteredData.map((item, index) => (
                                 <Tr key={index}>
                                     <Td>{item.name}</Td>
-                                    <Td>{item.email}</Td>
                                     <Td>{item.usn}</Td>
+                                    <Td>{item.email}</Td>
                                     <Td>{determineYear(item.usn)}</Td>
                                     <Td>{item.domain1}</Td>
                                     <Td>{item.domain2}</Td> 
