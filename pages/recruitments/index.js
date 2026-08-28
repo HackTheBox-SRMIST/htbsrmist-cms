@@ -76,8 +76,11 @@ const Recruitment = () => {
     });
 
     const { isOpen: isExcelModalOpen, onOpen: onExcelModalOpen, onClose: onExcelModalClose } = useDisclosure();
+    const { isOpen: isCsvModalOpen, onOpen: onCsvModalOpen, onClose: onCsvModalClose } = useDisclosure();
     const [excelDownloadType, setExcelDownloadType] = useState('both');
     const [excelDomainChoice, setExcelDomainChoice] = useState('');
+    const [csvDownloadType, setCsvDownloadType] = useState('both');
+    const [csvDomainChoice, setCsvDomainChoice] = useState('');
     const toast = useToast();
 
     const domainsList = useMemo(() => [
@@ -209,20 +212,49 @@ const Recruitment = () => {
         });
     }, [recruitmentData, filters]);
 
-    const handleDownloadCSV = useCallback(() => {
-        if (filteredData.length > 0) {
-            const csv = convertToCSV(filteredData);
+    const executeCsvDownload = useCallback(() => {
+        let finalData = recruitmentData;
+        
+        if (csvDownloadType === 'domain1' && csvDomainChoice) {
+            finalData = recruitmentData.filter(item => item.domain1 === csvDomainChoice);
+        } else if (csvDownloadType === 'domain2' && csvDomainChoice) {
+            finalData = recruitmentData.filter(item => item.domain2 === csvDomainChoice);
+        } else if (csvDownloadType !== 'both') {
+            console.warn("Please select a domain choice.");
+            return;
+        }
+
+        if (finalData.length > 0) {
+            const csv = convertToCSV(finalData);
             const blob = new Blob([csv], { type: "text/csv" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `recruitment_data.csv`;
+            
+            let fileName = 'recruitments_all.csv';
+            if (csvDownloadType !== 'both') {
+                const domainString = csvDownloadType === 'domain1' ? 'Domain1' : 'Domain2';
+                fileName = `recruitments_${csvDomainChoice.replace(/\s+/g, '_')}_${domainString}.csv`;
+            }
+            
+            link.download = fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            
+            onCsvModalClose();
         } else {
-            console.warn("No data to download.");
+            toast({
+                title: "No candidates found",
+                description: csvDownloadType === 'both' 
+                    ? "There are no registrations available to download." 
+                    : `No candidates chose ${csvDomainChoice} as their ${csvDownloadType === 'domain1' ? 'First' : 'Second'} Preference.`,
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+                position: "top",
+            });
         }
-    }, [filteredData]);
+    }, [recruitmentData, csvDownloadType, csvDomainChoice, onCsvModalClose, toast]);
 
     const convertToCSV = (data) => {
         const header = Object.keys(data[0]).join(",") + "\n";
@@ -436,7 +468,7 @@ const Recruitment = () => {
                         <Flex justify={{ base: "center", xl: "flex-start" }} wrap="wrap" gap={4} mb={{ base: 4, xl: 0 }}>
                             <Button
                                 colorScheme="green"
-                                onClick={handleDownloadCSV}
+                                onClick={onCsvModalOpen}
                             >
                                 Download CSV
                             </Button>
@@ -622,6 +654,60 @@ const Recruitment = () => {
                                 Download
                             </Button>
                             <Button variant="ghost" _hover={{ bg: "gray.700" }} onClick={onExcelModalClose}>
+                                Cancel
+                            </Button>
+                        </Flex>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* CSV Download Modal */}
+            <Modal isOpen={isCsvModalOpen} onClose={onCsvModalClose}>
+                <ModalOverlay />
+                <ModalContent bg="gray.800" color="white">
+                    <ModalHeader>Download CSV Data</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <VStack align="start" spacing={4}>
+                            <Text>Filter candidates by:</Text>
+                            <RadioGroup onChange={setCsvDownloadType} value={csvDownloadType}>
+                                <Stack direction='column' spacing={2}>
+                                    <Radio value='domain1' colorScheme="green">Domain 1</Radio>
+                                    <Radio value='domain2' colorScheme="green">Domain 2</Radio>
+                                    <Radio value='both' colorScheme="green">Both (All Data)</Radio>
+                                </Stack>
+                            </RadioGroup>
+
+                            {csvDownloadType !== 'both' && (
+                                <Select 
+                                    placeholder='Select domain' 
+                                    value={csvDomainChoice}
+                                    onChange={(e) => setCsvDomainChoice(e.target.value)}
+                                    bg="gray.900"
+                                    borderColor="gray.600"
+                                    color="white"
+                                    _hover={{ borderColor: "green.400" }}
+                                    _focus={{ borderColor: "green.400", boxShadow: "0 0 0 1px #48bb78" }}
+                                    sx={{
+                                        '> option, > optgroup': {
+                                            bg: 'gray.900',
+                                            color: 'white',
+                                        },
+                                    }}
+                                >
+                                    {domainsList.map(d => (
+                                        <option key={d} value={d}>{d}</option>
+                                    ))}
+                                </Select>
+                            )}
+                        </VStack>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Flex w="full" justify="center" gap={4}>
+                            <Button colorScheme="green" onClick={executeCsvDownload}>
+                                Download
+                            </Button>
+                            <Button variant="ghost" _hover={{ bg: "gray.700" }} onClick={onCsvModalClose}>
                                 Cancel
                             </Button>
                         </Flex>
