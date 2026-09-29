@@ -13,7 +13,13 @@ const eventSchema = new mongoose.Schema({
   registration_url: { type: String, required: true },
   duration: { type: Number, required: true },
   teamEvent: { type: Boolean, default: false },
-  teamSize: { type: Number, required: true },
+  teamSize: {
+    type: Number,
+    default: null,
+    required: function () {
+      return this.teamEvent === true;
+    },
+  },
 
   // === ✅ Backend-calculated or safe defaults ===
   rsvpLimit: { type: Number, default: 0 },

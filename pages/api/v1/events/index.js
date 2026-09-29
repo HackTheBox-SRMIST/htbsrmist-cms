@@ -27,8 +27,7 @@ export default async function handler(req, res) {
         "poster_url",
         "registration_url",
         "duration",
-        "teamEvent",
-        "teamSize"
+        "teamEvent"
       ];
 
       // 🧩 Validate missing fields
@@ -39,6 +38,11 @@ export default async function handler(req, res) {
           eventData[field] === ""
       );
 
+      // 🧩 teamSize is only required for team events
+      if (eventData.teamEvent && !eventData.teamSize) {
+        missingFields.push("teamSize");
+      }
+
       if (missingFields.length > 0) {
         return res.status(400).json({
           success: false,
@@ -47,7 +51,12 @@ export default async function handler(req, res) {
       }
 
       // 🧩 Create new event dynamically
-      const newEvent = await Event.create(eventData);
+      const payload = {
+        ...eventData,
+        teamSize: eventData.teamEvent ? Number(eventData.teamSize) : null
+      };
+
+      const newEvent = await Event.create(payload);
 
       return res.status(201).json({
         success: true,

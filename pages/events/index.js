@@ -1,7 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Link from "next/link";
+import {
+    useToast,
+    useDisclosure,
+    AlertDialog,
+    AlertDialogOverlay,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogBody,
+    AlertDialogFooter,
+    Button,
+} from "@chakra-ui/react";
 import withAuth from "@/components/withAuth";
+import { useTheme } from "@/provider/ThemeProvider";
+import { Themes } from "@/utils/misc/themes";
+import { ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 import LoadingSpinner from "@/components/shared/Loading";
 import Badge from "@/components/shared/Badge";
 import AddEventModal from "./AddEventModal";
@@ -11,6 +25,15 @@ const Events = () => {
     const [pastEvents, setPastEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddEventModal, setShowAddEventModal] = useState(false);
+    const [editingEvent, setEditingEvent] = useState(null);
+    const toast = useToast();
+    const { isDark } = useTheme();
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+    const cancelRef = useRef();
+    const deleteCancelRef = useRef();
+    const [pendingToggleEvent, setPendingToggleEvent] = useState(null);
+    const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
 
     const cleanDate = (dateStr) => {
         const cleaned = dateStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
@@ -44,6 +67,98 @@ const Events = () => {
             console.error("Error fetching events:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const requestToggle = (event) => {
+        setPendingToggleEvent(event);
+        onOpen();
+    };
+
+    const confirmToggle = () => {
+        if (pendingToggleEvent) {
+            toggleActive(pendingToggleEvent);
+        }
+        onClose();
+    };
+
+    const showToast = (status, title, description) => {
+        const palette = isDark ? Themes.dark : Themes.light;
+        const themeBg = {
+            success: palette.success.background,
+            error: palette.error.background,
+            info: palette.info.background,
+        };
+        const themeText = {
+            success: palette.success.color,
+            error: palette.error.color,
+            info: palette.info.color,
+        };
+        toast({
+            title,
+            description,
+            status,
+            duration: 5000,
+            isClosable: true,
+            position: "top-right",
+            containerStyle: {
+                background: themeBg[status],
+                color: themeText[status],
+                border: `1px solid ${themeText[status]}55`,
+            },
+        });
+    };
+
+    const toggleActive = async (event) => {
+        try {
+            await axios.patch(`/api/v1/events/${event.slug}`, {
+                is_active: !event.is_active,
+            });
+            const nowActive = !event.is_active;
+            showToast(
+                nowActive ? "success" : "info",
+                nowActive ? "Event Activated" : "Event Inactivated",
+                `"${event.event_name}" has been marked ${nowActive ? "active" : "inactive"}.`
+            );
+            fetchEvents();
+        } catch (error) {
+            console.error("Error toggling event status:", error);
+            showToast(
+                "error",
+                "Error",
+                `Failed to update "${event.event_name}" status.`
+            );
+        }
+    };
+
+    const requestDelete = (event) => {
+        setPendingDeleteEvent(event);
+        onDeleteOpen();
+    };
+
+    const confirmDelete = () => {
+        if (pendingDeleteEvent) {
+            deleteEvent(pendingDeleteEvent);
+        }
+        onDeleteClose();
+    };
+
+    const deleteEvent = async (event) => {
+        try {
+            await axios.delete(`/api/v1/events/${event.slug}`);
+            showToast(
+                "success",
+                "Event Deleted",
+                `"${event.event_name}" has been deleted.`
+            );
+            fetchEvents();
+        } catch (error) {
+            console.error("Error deleting event:", error);
+            showToast(
+                "error",
+                "Error",
+                `Failed to delete "${event.event_name}".`
+            );
         }
     };
 
@@ -81,7 +196,7 @@ const Events = () => {
                     {currentEvents.length > 0 ? (
                         currentEvents.map((event) => (
                             <Link href={`/events/${event.slug}`} key={event._id}>
-                                <div className="group cursor-pointer bg-light-background-light dark:bg-dark-background-light shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2">
+                                <div className="group cursor-pointer bg-light-background-light dark:bg-dark-background-light shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 h-full flex flex-col">
                                     <div className="relative overflow-hidden">
                                         <img
                                             src={event.poster_url}
@@ -94,8 +209,36 @@ const Events = () => {
                                                 variant={event.is_active ? "success" : "error"}
                                             />
                                         </div>
+                                        <div className="absolute top-4 left-4">
+                                            <button
+                                                type="button"
+                                                title="Edit event"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setEditingEvent(event);
+                                                }}
+                                                className="bg-black/50 hover:bg-black/70 text-white p-2.5 rounded-lg transition-colors"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            title="Delete event"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                requestDelete(event);
+                                            }}
+                                            className="absolute bottom-4 right-4 bg-red-500/70 hover:bg-red-600 text-white p-2.5 rounded-lg transition-colors z-10"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </div>
-                                    <div className="p-6">
+                                    <div className="p-6 flex-1 flex flex-col gap-4">
                                         <h3 className="text-2xl dark:text-dark-color text-light-color font-bold mb-3 line-clamp-2">
                                             {event.event_name}
                                         </h3>
@@ -124,6 +267,35 @@ const Events = () => {
                                                 <p className="dark:text-dark-color text-light-color text-sm">
                                                     {event.venue}
                                                 </p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="flex gap-2">
+                                                <span className="inline-flex items-center justify-center gap-2 flex-1 bg-dark-accent text-black px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:opacity-90">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Manage RSVP
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    title={event.is_active ? "Set event inactive" : "Set event active"}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        requestToggle(event);
+                                                    }}
+                                                    className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-white transition-all duration-200 ${event.is_active
+                                                            ? "bg-red-500 hover:bg-red-600"
+                                                            : "bg-green-500 hover:bg-green-600"
+                                                        }`}
+                                                >
+                                                    {event.is_active
+                                                            ? <ToggleRight className="w-5 h-5" />
+                                                            : <ToggleLeft className="w-5 h-5" />
+                                                        }
+                                                    {event.is_active ? "Inactivate" : "Activate"}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -157,7 +329,7 @@ const Events = () => {
                     {pastEvents.length > 0 ? (
                         pastEvents.map((event) => (
                             <Link href={`/events/${event.slug}`} key={event._id}>
-                                <div className="group cursor-pointer bg-light-background-light dark:bg-dark-side shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 opacity-90 hover:opacity-100">
+                                <div className="group cursor-pointer bg-light-background-light dark:bg-dark-side shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 opacity-90 hover:opacity-100 h-full flex flex-col">
                                     <div className="relative overflow-hidden">
                                         <img
                                             src={event.poster_url}
@@ -170,8 +342,36 @@ const Events = () => {
                                                 variant={event.is_active ? "success" : "error"}
                                             />
                                         </div>
+                                        <div className="absolute top-4 left-4">
+                                            <button
+                                                type="button"
+                                                title="Edit event"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setEditingEvent(event);
+                                                }}
+                                                className="bg-black/50 hover:bg-black/70 text-white p-2.5 rounded-lg transition-colors"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            title="Delete event"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                requestDelete(event);
+                                            }}
+                                            className="absolute bottom-4 right-4 bg-red-500/70 hover:bg-red-600 text-white p-2.5 rounded-lg transition-colors z-10"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </div>
-                                    <div className="p-6">
+                                    <div className="p-6 flex-1 flex flex-col gap-4">
                                         <h3 className="text-2xl dark:text-dark-color text-light-color font-bold mb-3 line-clamp-2">
                                             {event.event_name}
                                         </h3>
@@ -202,6 +402,35 @@ const Events = () => {
                                                 </p>
                                             </div>
                                         </div>
+                                        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="flex gap-2">
+                                                <span className="inline-flex items-center justify-center gap-2 flex-1 bg-dark-accent text-black px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:opacity-90">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Manage RSVP
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    title={event.is_active ? "Set event inactive" : "Set event active"}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        requestToggle(event);
+                                                    }}
+                                                    className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-white transition-all duration-200 ${event.is_active
+                                                            ? "bg-red-500 hover:bg-red-600"
+                                                            : "bg-green-500 hover:bg-green-600"
+                                                        }`}
+                                                >
+                                                    {event.is_active
+                                                            ? <ToggleRight className="w-5 h-5" />
+                                                            : <ToggleLeft className="w-5 h-5" />
+                                                        }
+                                                    {event.is_active ? "Inactivate" : "Activate"}
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </Link>
@@ -218,11 +447,81 @@ const Events = () => {
                 </div>
             </div>
 
-            {showAddEventModal && (
+            {(showAddEventModal || editingEvent) && (
                 <AddEventModal
-                    onClose={() => setShowAddEventModal(false)}
+                    initialData={editingEvent}
+                    onClose={() => {
+                        setShowAddEventModal(false);
+                        setEditingEvent(null);
+                    }}
                     onEventAdded={fetchEvents}
                 />
+            )}
+
+            {isOpen && pendingToggleEvent && (
+                <AlertDialog
+                    isOpen={isOpen}
+                    leastDestructiveRef={cancelRef}
+                    onClose={onClose}
+                >
+                    <AlertDialogOverlay>
+                        <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                {pendingToggleEvent.is_active
+                                    ? "Inactivate Event"
+                                    : "Activate Event"}
+                            </AlertDialogHeader>
+                            <AlertDialogBody>
+                                {pendingToggleEvent.is_active
+                                    ? `Are you sure you want to make "${pendingToggleEvent.event_name}" inactive?`
+                                    : `Are you sure you want to make "${pendingToggleEvent.event_name}" active?`}
+                            </AlertDialogBody>
+                            <AlertDialogFooter>
+                                <Button ref={cancelRef} onClick={onClose}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    colorScheme={pendingToggleEvent.is_active ? "red" : "green"}
+                                    onClick={confirmToggle}
+                                    ml={3}
+                                >
+                                    Yes, {pendingToggleEvent.is_active ? "Inactivate" : "Activate"}
+                                </Button>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialogOverlay>
+                </AlertDialog>
+            )}
+
+            {isDeleteOpen && pendingDeleteEvent && (
+                <AlertDialog
+                    isOpen={isDeleteOpen}
+                    leastDestructiveRef={deleteCancelRef}
+                    onClose={onDeleteClose}
+                >
+                    <AlertDialogOverlay>
+                        <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                Delete Event
+                            </AlertDialogHeader>
+                            <AlertDialogBody>
+                                Are you sure you really want to delete "{pendingDeleteEvent.event_name}"? This action cannot be undone.
+                            </AlertDialogBody>
+                            <AlertDialogFooter>
+                                <Button ref={deleteCancelRef} onClick={onDeleteClose}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    colorScheme="red"
+                                    onClick={confirmDelete}
+                                    ml={3}
+                                >
+                                    Yes, Delete
+                                </Button>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialogOverlay>
+                </AlertDialog>
             )}
         </div>
     );
