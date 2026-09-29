@@ -245,7 +245,9 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
             onClose();
         } catch (error) {
             console.error("Error saving event:", error);
-            setError(`Error ${isEdit ? "updating" : "adding"} event. Check console for details.`);
+            const serverMessage =
+                error?.response?.data?.error || error?.message || "Unknown error";
+            setError(`Error ${isEdit ? "updating" : "adding"} event: ${serverMessage}`);
         }
     };
 
