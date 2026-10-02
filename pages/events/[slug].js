@@ -9,7 +9,10 @@ import SearchBar from "@/components/events/SearchBar";
 import SendRsvpModal from "@/components/events/SendRsvpModal";
 import FilterDropdown from "@/components/events/FilterDropdown";
 import QRScannerModal from "@/components/events/QRScannerModal";
+import ImportJsonModal from "@/components/events/ImportJsonModal";
+import RsvpChoiceModal from "@/components/events/RsvpChoiceModal";
 import LoadingSpinner from "@/components/shared/Loading";
+import { Mail } from "lucide-react";
 
 const convertToCSV = (data) => {
     const header = Object.keys(data[0]).join(",") + "\n";
@@ -28,7 +31,10 @@ const EventDetails = () => {
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showSendRsvpModal, setShowSendRsvpModal] = useState(false);
+    const [showRsvpChoiceModal, setShowRsvpChoiceModal] = useState(false);
     const [showQRScanner, setShowQRScanner] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [refreshTick, setRefreshTick] = useState(0);
     const [filterOptions, setFilterOptions] = useState({
         rsvp: false,
         checkin: false,
@@ -61,7 +67,7 @@ const EventDetails = () => {
 
             fetchEvent();
         }
-    }, [slug]);
+    }, [slug, refreshTick]);
 
     useEffect(() => {
         const applyFilters = () => {
@@ -184,13 +190,24 @@ const EventDetails = () => {
     return (
         <div className="bg-light-background-darker dark:bg-dark-background-darker px-4 py-8 text-black min-h-screen">
             <EventInfo event={event} />
-            <div className="flex max-md:flex-col justify-between">
+            <div className="flex flex-wrap gap-3 items-center">
                 <button
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg mb-4"
-                    onClick={() => setShowSendRsvpModal(true)}
+                    className="bg-green-500 hover:bg-green-600 text-black font-semibold px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5"
+                    onClick={() => setShowRsvpChoiceModal(true)}
                 >
-                    SEND RSVP MAILS
+                    <Mail className="w-4 h-4" />
+                    <span>RSVP OPTIONS</span>
                 </button>
+                {showRsvpChoiceModal && (
+                    <RsvpChoiceModal
+                        event={event}
+                        onClose={() => setShowRsvpChoiceModal(false)}
+                        onOpenOldRsvp={() => {
+                            setShowRsvpChoiceModal(false);
+                            setShowSendRsvpModal(true);
+                        }}
+                    />
+                )}
                 {showSendRsvpModal && (
                     <SendRsvpModal
                         participants={filteredParticipants}
@@ -199,20 +216,34 @@ const EventDetails = () => {
                     />
                 )}
                 <button
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4"
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg"
                     onClick={handleOpenQRScanner}
                 >
                     OPEN QR SCANNER
                 </button>
                 <button
-                    className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-4"
+                    className="bg-gray-500 text-white px-4 py-2 rounded-lg"
                     onClick={handleDownloadCSV}
                 >
                     DOWNLOAD CSV
                 </button>
+                <button
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                    onClick={() => setShowImportModal(true)}
+                >
+                    LISTS
+                </button>
             </div>
 
             {showQRScanner && <QRScannerModal onClose={handleCloseQRScanner} />}
+            {showImportModal && (
+                <ImportJsonModal
+                    slug={slug}
+                    event={event}
+                    onClose={() => setShowImportModal(false)}
+                    onImported={() => setRefreshTick((t) => t + 1)}
+                />
+            )}
             <h2 className="text-2xl font-bold mb-4 dark:text-dark-color text-light-color">Participants</h2>
             <FilterDropdown onFilterChange={handleFilterChange} />
             <p className="my-4 dark:text-dark-color text-light-color">

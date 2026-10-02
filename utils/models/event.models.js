@@ -58,11 +58,7 @@ const eventSchema = new mongoose.Schema({
   },
 
   collection: {
-    type: {
-      participants: { type: String, default: "participants" },
-      organizers: { type: String, default: "organizers" },
-      volunteers: { type: String, default: "volunteers" },
-    },
+    type: mongoose.Schema.Types.Mixed,
     default: {
       participants: "participants",
       organizers: "organizers",
@@ -71,28 +67,23 @@ const eventSchema = new mongoose.Schema({
   },
 
   certificate: {
-    type: {
-      organizers: { type: String, default: "" },
-      participants: { type: String, default: "" },
-      volunteers: { type: String, default: "" },
-    },
-    default: {
-      organizers: "",
-      participants: "",
-      volunteers: "",
-    },
+    type: mongoose.Schema.Types.Mixed,
+    default: {},
   },
 
   jimp_config: {
-    type: {
-      yOffset: { type: String, default: "-70" },
-      color: { type: String, default: "white" },
-      font_size: { type: String, default: "64" },
-    },
+    type: mongoose.Schema.Types.Mixed,
     default: {
       yOffset: "-70",
+      xOffset: "0",
       color: "white",
       font_size: "64",
+      font_family: "Open Sans",
+      custom_font_url: "",
+      font_weight: "bold",
+      letter_spacing: "0",
+      text_case: "capitalize",
+      alignment: "center",
     },
   },
 });
