@@ -1,9 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import { useToast } from "@chakra-ui/react";
+import { useTheme } from "@/provider/ThemeProvider";
+import { Themes } from "@/utils/misc/themes";
+import { Image as ImageIcon, Trash2, Edit2, ExternalLink } from "lucide-react";
 import CertificateDesigner from "@/components/events/CertificateDesigner";
 
 const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
     const isEdit = Boolean(initialData);
+    const toast = useToast();
+    const { isDark } = useTheme();
+
+    const showToast = (status, title, description) => {
+        const palette = isDark ? Themes.dark : Themes.light;
+        const themeBg = {
+            success: palette.success.background,
+            error: palette.error.background,
+            info: palette.info.background,
+            warning: palette.warn?.background || palette.info.background,
+        };
+        const themeText = {
+            success: palette.success.color,
+            error: palette.error.color,
+            info: palette.info.color,
+            warning: palette.warn?.color || palette.info.color,
+        };
+        toast({
+            title,
+            description,
+            status,
+            duration: 5000,
+            isClosable: true,
+            position: "top-right",
+            containerStyle: {
+                background: themeBg[status] || palette.info.background,
+                color: themeText[status] || palette.info.color,
+                border: `1px solid ${themeText[status] || palette.info.color}55`,
+            },
+        });
+    };
 
     const defaults = {
         event_name: "",
@@ -38,13 +73,31 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
         },
     };
 
+    const normalizeGallery = (rawGallery) => {
+        if (!rawGallery) return [];
+        if (Array.isArray(rawGallery)) {
+            return rawGallery
+                .map((item) => (typeof item === "string" ? item.trim() : item?.url?.trim() || ""))
+                .filter(Boolean);
+        }
+        if (typeof rawGallery === "string") {
+            return rawGallery
+                .split(/[\n,]+/)
+                .map((s) => s.trim())
+                .filter(Boolean);
+        }
+        return [];
+    };
+
     const buildFormData = (data) => {
         if (!data) return { ...defaults };
 
         const base = { ...defaults };
         Object.keys(defaults).forEach((key) => {
             if (data[key] !== undefined && data[key] !== null) {
-                if (Array.isArray(defaults[key])) {
+                if (key === "gallery") {
+                    base.gallery = normalizeGallery(data.gallery);
+                } else if (Array.isArray(defaults[key])) {
                     base[key] = [...data[key]];
                 } else if (typeof defaults[key] === "object") {
                     base[key] = { ...defaults[key], ...data[key] };
@@ -57,6 +110,14 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
     };
 
     const [formData, setFormData] = useState(() => buildFormData(initialData));
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        setFormData(buildFormData(initialData));
+        setGalleryInput("");
+        setEditingGalleryIndex(null);
+        setError("");
+    }, [initialData]);
 
     const [error, setError] = useState("");
     const [activeTab, setActiveTab] = useState("basic");
@@ -160,27 +221,39 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
     };
 
     const addGalleryImage = () => {
-        if (galleryInput.trim()) {
-            if (editingGalleryIndex !== null) {
-                const updatedGallery = [...formData.gallery];
-                updatedGallery[editingGalleryIndex] = galleryInput.trim();
-                setFormData({
-                    ...formData,
-                    gallery: updatedGallery,
-                });
-                setEditingGalleryIndex(null);
-            } else {
-                setFormData({
-                    ...formData,
-                    gallery: [...formData.gallery, galleryInput.trim()],
-                });
+        const trimmed = galleryInput.trim();
+        if (!trimmed) return;
+
+        // Support single or multiple URLs (split by commas or newlines)
+        const newUrls = trimmed
+            .split(/[\n,]+/)
+            .map((url) => url.trim())
+            .filter((url) => url.length > 0);
+
+        if (newUrls.length === 0) return;
+
+        if (editingGalleryIndex !== null) {
+            const updatedGallery = [...(formData.gallery || [])];
+            updatedGallery[editingGalleryIndex] = newUrls[0];
+            if (newUrls.length > 1) {
+                updatedGallery.push(...newUrls.slice(1));
             }
-            setGalleryInput("");
+            setFormData((prev) => ({
+                ...prev,
+                gallery: Array.from(new Set(updatedGallery)),
+            }));
+            setEditingGalleryIndex(null);
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                gallery: Array.from(new Set([...(prev.gallery || []), ...newUrls])),
+            }));
         }
+        setGalleryInput("");
     };
 
     const editGalleryImage = (index) => {
-        setGalleryInput(formData.gallery[index]);
+        setGalleryInput(formData.gallery[index] || "");
         setEditingGalleryIndex(index);
     };
 
@@ -190,15 +263,32 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
     };
 
     const removeGalleryImage = (index) => {
-        setFormData({
-            ...formData,
-            gallery: formData.gallery.filter((_, i) => i !== index),
-        });
+        setFormData((prev) => ({
+            ...prev,
+            gallery: prev.gallery.filter((_, i) => i !== index),
+        }));
+        if (editingGalleryIndex === index) {
+            setEditingGalleryIndex(null);
+            setGalleryInput("");
+        } else if (editingGalleryIndex !== null && editingGalleryIndex > index) {
+            setEditingGalleryIndex(editingGalleryIndex - 1);
+        }
+    };
+
+    const clearAllGallery = () => {
+        setFormData((prev) => ({
+            ...prev,
+            gallery: [],
+        }));
+        setEditingGalleryIndex(null);
+        setGalleryInput("");
     };
 
     // ----- Submit -----
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
         setError("");
 
         const requiredFields = [
@@ -222,19 +312,57 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
 
         if (missing.length > 0) {
             setError(`Missing required fields: ${missing.join(", ")}`);
+            showToast("warning", "Missing Required Fields", `Please fill in: ${missing.join(", ")}`);
             return;
         }
 
         if (formData.teamEvent && !formData.teamSize) {
             setError("Team size is required for team events");
+            showToast("warning", "Missing Team Size", "Team size is required for team events");
             return;
         }
 
-        try {
-            if (isEdit) {
-                await axios.patch(`/api/v1/events/${initialData.slug}`, formData);
+        // Auto-flush pending gallery input if user typed or pasted without clicking "Add Photo"
+        let currentGallery = [...(formData.gallery || [])];
+        if (galleryInput.trim()) {
+            const pendingUrls = galleryInput
+                .trim()
+                .split(/[\n,]+/)
+                .map((u) => u.trim())
+                .filter(Boolean);
+
+            if (editingGalleryIndex !== null) {
+                currentGallery[editingGalleryIndex] = pendingUrls[0];
+                if (pendingUrls.length > 1) {
+                    currentGallery.push(...pendingUrls.slice(1));
+                }
             } else {
-                await axios.post("/api/v1/events", formData);
+                currentGallery.push(...pendingUrls);
+            }
+            currentGallery = Array.from(new Set(currentGallery));
+        }
+
+        const payload = {
+            ...formData,
+            gallery: currentGallery,
+        };
+
+        try {
+            setSubmitting(true);
+            if (isEdit) {
+                await axios.patch(`/api/v1/events/${initialData.slug}`, payload);
+                showToast(
+                    "success",
+                    "Event Updated",
+                    `"${payload.event_name || initialData.event_name}" has been updated successfully.`
+                );
+            } else {
+                await axios.post("/api/v1/events", payload);
+                showToast(
+                    "success",
+                    "Event Created",
+                    `"${payload.event_name}" has been created successfully.`
+                );
             }
             onEventAdded();
             onClose();
@@ -243,6 +371,13 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
             const serverMessage =
                 error?.response?.data?.error || error?.message || "Unknown error";
             setError(`Error ${isEdit ? "updating" : "adding"} event: ${serverMessage}`);
+            showToast(
+                "error",
+                isEdit ? "Failed to Update Event" : "Failed to Create Event",
+                serverMessage
+            );
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -636,76 +771,158 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
 
                     {/* MEDIA TAB */}
                     {activeTab === "media" && (
-                        <div>
-                            <section className="rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-                                <h3 className={sectionCls}>Gallery Images</h3>
+                        <div className="space-y-6">
+                            <section className="rounded-xl border border-gray-200 dark:border-gray-700 p-5 bg-light-background-light dark:bg-dark-background-light">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                                    <div>
+                                        <h3 className={sectionCls + " mb-1"}>Event Gallery Photos</h3>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Add photo URLs for event highlights, recaps, and gallery showcases. You can paste multiple URLs separated by commas or line breaks.
+                                        </p>
+                                    </div>
+                                    {formData.gallery.length > 0 && (
+                                        <span className="self-start sm:self-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-dark-accent/20 text-dark-accent border border-dark-accent/40">
+                                            {formData.gallery.length} photo{formData.gallery.length !== 1 ? "s" : ""}
+                                        </span>
+                                    )}
+                                </div>
+
                                 <label className={labelCls}>
                                     {editingGalleryIndex !== null
-                                        ? `Editing Image ${editingGalleryIndex + 1} of ${formData.gallery.length}`
-                                        : "Add Image URL"}
+                                        ? `Editing Photo #${editingGalleryIndex + 1}`
+                                        : "Image URL(s)"}
                                 </label>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
                                     <input
                                         type="text"
-                                        placeholder="https://..."
+                                        placeholder="https://images.unsplash.com/... or https://example.com/photo.jpg"
                                         value={galleryInput}
                                         onChange={(e) => setGalleryInput(e.target.value)}
-                                        onKeyPress={(e) =>
-                                            e.key === "Enter" && (e.preventDefault(), addGalleryImage())
-                                        }
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                addGalleryImage();
+                                            }
+                                        }}
                                         className={inputCls}
                                     />
-                                    {editingGalleryIndex !== null && (
+                                    <div className="flex gap-2 shrink-0">
+                                        {editingGalleryIndex !== null && (
+                                            <button
+                                                type="button"
+                                                onClick={cancelGalleryEdit}
+                                                className="px-4 py-2.5 rounded-lg border border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm font-medium"
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
                                         <button
                                             type="button"
-                                            onClick={cancelGalleryEdit}
-                                            className="shrink-0 px-4 py-2.5 rounded-lg border border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                                            onClick={addGalleryImage}
+                                            className={`${accentBtnCls} text-sm font-semibold`}
                                         >
-                                            Cancel
+                                            {editingGalleryIndex !== null ? "Update Photo" : "Add Photo"}
                                         </button>
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={addGalleryImage}
-                                        className={`${accentBtnCls} shrink-0`}
-                                    >
-                                        {editingGalleryIndex !== null ? "Update Image" : "Add Image"}
-                                    </button>
+                                    </div>
                                 </div>
-                                {formData.gallery.length > 0 && (
-                                    <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {formData.gallery.map((url, i) => (
-                                            <div
-                                                key={i}
-                                                className={`bg-light-background-dark dark:bg-dark-background-dark p-3 rounded-lg flex justify-between items-center gap-3 ${i === editingGalleryIndex
-                                                        ? "ring-2 ring-dark-accent"
-                                                        : ""
-                                                    }`}
+
+                                {formData.gallery.length > 0 ? (
+                                    <div className="mt-6">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="text-sm font-medium text-light-color dark:text-dark-color">
+                                                Gallery Photos ({formData.gallery.length})
+                                            </h4>
+                                            <button
+                                                type="button"
+                                                onClick={clearAllGallery}
+                                                className="text-xs text-red-500 hover:text-red-600 hover:underline"
                                             >
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center shrink-0">
-                                                        <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-300">IMG</span>
+                                                Clear all photos
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                            {formData.gallery.map((url, i) => (
+                                                <div
+                                                    key={i}
+                                                    className={`group relative rounded-xl border border-gray-200 dark:border-gray-700 bg-light-background-dark dark:bg-dark-background-dark overflow-hidden transition-all duration-200 ${
+                                                        i === editingGalleryIndex ? "ring-2 ring-dark-accent shadow-md" : ""
+                                                    }`}
+                                                >
+                                                    <div className="relative aspect-video w-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                                                        <img
+                                                            src={url}
+                                                            alt={`Gallery photo ${i + 1}`}
+                                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                            onError={(e) => {
+                                                                e.target.style.display = "none";
+                                                                if (e.target.nextSibling) {
+                                                                    e.target.nextSibling.style.display = "flex";
+                                                                }
+                                                            }}
+                                                        />
+                                                        <div
+                                                            style={{ display: "none" }}
+                                                            className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 p-2 text-center"
+                                                        >
+                                                            <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                                                            <span className="text-[11px] truncate max-w-[90%]">Image preview unavailable</span>
+                                                        </div>
+                                                        <span className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded font-mono">
+                                                            #{i + 1}
+                                                        </span>
                                                     </div>
-                                                    <span className="text-sm truncate text-light-color dark:text-dark-color">{url}</span>
+
+                                                    <div className="p-3">
+                                                        <p className="text-xs truncate text-light-color dark:text-dark-color font-mono mb-2" title={url}>
+                                                            {url}
+                                                        </p>
+                                                        <div className="flex items-center justify-between pt-2 border-t border-gray-200/60 dark:border-gray-700/60 text-xs">
+                                                            <a
+                                                                href={url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-1 text-gray-500 hover:text-dark-accent transition-colors"
+                                                                title="Open original image"
+                                                            >
+                                                                <ExternalLink className="w-3.5 h-3.5" />
+                                                                <span>View</span>
+                                                            </a>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => editGalleryImage(i)}
+                                                                    className="inline-flex items-center gap-1 text-blue-500 hover:text-blue-600 transition-colors"
+                                                                    title="Edit URL"
+                                                                >
+                                                                    <Edit2 className="w-3.5 h-3.5" />
+                                                                    <span>Edit</span>
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeGalleryImage(i)}
+                                                                    className="inline-flex items-center gap-1 text-red-500 hover:text-red-600 transition-colors"
+                                                                    title="Remove photo"
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                    <span>Delete</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-3 shrink-0">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => editGalleryImage(i)}
-                                                        className="text-sm font-medium text-blue-500 hover:text-blue-600"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeGalleryImage(i)}
-                                                        className="text-sm font-medium text-red-500 hover:text-red-600"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="mt-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 text-center">
+                                        <ImageIcon className="w-10 h-10 mx-auto text-gray-400 dark:text-gray-500 mb-2" />
+                                        <p className="text-sm font-medium text-light-color dark:text-dark-color">
+                                            No gallery photos added yet
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Add image URLs above to showcase event photos in the gallery.
+                                        </p>
                                     </div>
                                 )}
                             </section>
@@ -847,16 +1064,28 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-5 py-2.5 rounded-lg border border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                        disabled={submitting}
+                        className="px-5 py-2.5 rounded-lg border border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         onClick={handleSubmit}
-                        className="px-6 py-2.5 rounded-lg bg-dark-accent text-black font-semibold hover:opacity-90 transition-all duration-200 hover:scale-[1.02]"
+                        disabled={submitting}
+                        className="px-6 py-2.5 rounded-lg bg-dark-accent text-black font-semibold hover:opacity-90 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 min-w-[120px]"
                     >
-                        {isEdit ? "Save Changes" : "Submit"}
+                        {submitting && (
+                            <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        )}
+                        <span>
+                            {submitting
+                                ? (isEdit ? "Saving..." : "Creating...")
+                                : (isEdit ? "Save Changes" : "Submit")}
+                        </span>
                     </button>
                 </div>
             </div>

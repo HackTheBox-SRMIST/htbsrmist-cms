@@ -46,6 +46,11 @@ const eventSchema = new mongoose.Schema({
     default: [],
   },
 
+  gallery: {
+    type: [String],
+    default: [],
+  },
+
   prerequisites: { type: [String], default: [] },
   cost: { type: Number, default: 0 },
 
@@ -80,7 +85,7 @@ const eventSchema = new mongoose.Schema({
       font_size: "64",
     },
   },
-});
+}, { strict: false });
 
 const Event =
   mongoose.models.events || mongoose.model("events", eventSchema);
