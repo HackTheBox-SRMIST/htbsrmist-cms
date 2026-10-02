@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import CertificateDesigner from "@/components/events/CertificateDesigner";
 
 const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
     const isEdit = Boolean(initialData);
@@ -28,18 +29,18 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
             volunteers: "volunteers",
             participants: "participants",
         },
-        certificate: {
-            organizers: "",
-            volunteers: "",
-            participants: "",
-            first_place: "",
-            second_place: "",
-            third_place: "",
-        },
+        certificate: {},
         jimp_config: {
             yOffset: "-70",
+            xOffset: "0",
             color: "white",
             font_size: "64",
+            font_family: "Open Sans",
+            custom_font_url: "",
+            font_weight: "bold",
+            letter_spacing: "0",
+            text_case: "capitalize",
+            alignment: "center",
         },
     };
 
@@ -719,66 +720,24 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
 
                     {/* CERTIFICATES TAB */}
                     {activeTab === "certificates" && (
-                        <div>
-                            <section className="rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-                                <h3 className={sectionCls}>Certificate Templates</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div>
-                                        <label className={labelCls}>Organizers Certificate URL</label>
-                                        <input
-                                            placeholder="https://..."
-                                            value={formData.certificate.organizers}
-                                            onChange={(e) => handleNestedChange("certificate", "organizers", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelCls}>Volunteers Certificate URL</label>
-                                        <input
-                                            placeholder="https://..."
-                                            value={formData.certificate.volunteers}
-                                            onChange={(e) => handleNestedChange("certificate", "volunteers", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelCls}>Participants Certificate URL</label>
-                                        <input
-                                            placeholder="https://..."
-                                            value={formData.certificate.participants}
-                                            onChange={(e) => handleNestedChange("certificate", "participants", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelCls}>First Place Certificate URL</label>
-                                        <input
-                                            placeholder="https://..."
-                                            value={formData.certificate.first_place}
-                                            onChange={(e) => handleNestedChange("certificate", "first_place", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelCls}>Second Place Certificate URL</label>
-                                        <input
-                                            placeholder="https://..."
-                                            value={formData.certificate.second_place}
-                                            onChange={(e) => handleNestedChange("certificate", "second_place", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelCls}>Third Place Certificate URL</label>
-                                        <input
-                                            placeholder="https://..."
-                                            value={formData.certificate.third_place}
-                                            onChange={(e) => handleNestedChange("certificate", "third_place", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                </div>
-                            </section>
+                        <div className="py-2">
+                            <CertificateDesigner
+                                certificate={formData.certificate}
+                                jimp_config={formData.jimp_config}
+                                onChangeCertificate={(field, value) => handleNestedChange("certificate", field, value)}
+                                onChangeJimpConfig={(field, value) => handleNestedChange("jimp_config", field, value)}
+                                onBatchChangeJimpConfig={(updates) => {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        jimp_config: {
+                                            ...prev.jimp_config,
+                                            ...updates,
+                                        },
+                                    }));
+                                }}
+                                eventName={formData.event_name}
+                                isModal={false}
+                            />
                         </div>
                     )}
 
@@ -830,7 +789,16 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
                             </section>
 
                             <section className="rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-                                <h3 className={sectionCls}>JIMP Configuration (Certificate Text)</h3>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className={sectionCls + " mb-0"}>JIMP Configuration (Certificate Text)</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab("certificates")}
+                                        className="text-xs font-semibold text-dark-accent hover:underline flex items-center gap-1"
+                                    >
+                                        Open Live Designer & Preview in Certificates Tab →
+                                    </button>
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                     <div>
                                         <label className={labelCls}>Y Offset</label>
@@ -839,6 +807,25 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
                                             placeholder="-70"
                                             value={formData.jimp_config.yOffset}
                                             onChange={(e) => handleNestedChange("jimp_config", "yOffset", e.target.value)}
+                                            className={inputCls}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>X Offset</label>
+                                        <input
+                                            type="number"
+                                            placeholder="0"
+                                            value={formData.jimp_config.xOffset ?? "0"}
+                                            onChange={(e) => handleNestedChange("jimp_config", "xOffset", e.target.value)}
+                                            className={inputCls}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>Font Family</label>
+                                        <input
+                                            placeholder="Open Sans"
+                                            value={formData.jimp_config.font_family ?? "Open Sans"}
+                                            onChange={(e) => handleNestedChange("jimp_config", "font_family", e.target.value)}
                                             className={inputCls}
                                         />
                                     </div>
@@ -858,6 +845,15 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
                                             placeholder="64"
                                             value={formData.jimp_config.font_size}
                                             onChange={(e) => handleNestedChange("jimp_config", "font_size", e.target.value)}
+                                            className={inputCls}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>Custom Font URL (Optional)</label>
+                                        <input
+                                            placeholder="https://fonts.googleapis.com/... or .ttf url"
+                                            value={formData.jimp_config.custom_font_url ?? ""}
+                                            onChange={(e) => handleNestedChange("jimp_config", "custom_font_url", e.target.value)}
                                             className={inputCls}
                                         />
                                     </div>

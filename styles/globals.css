@@ -55,3 +55,118 @@ body {
     filter: saturate(0);
     -webkit-filter: saturate(0);
   }
+
+/* === Color Scheme & Modern Scrollbars === */
+html.dark,
+body.dark,
+.dark {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}
+
+/* Chrome, Edge, Safari, Brave - Universal Scrollbars */
+*::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track,
+::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner,
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+*::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4) !important;
+  border-radius: 9999px !important;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6) !important;
+}
+
+.dark *::-webkit-scrollbar-thumb,
+.dark::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3) !important;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover,
+.dark::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5) !important;
+}
+
+.dark *::-webkit-scrollbar-track,
+.dark::-webkit-scrollbar-track,
+.dark *::-webkit-scrollbar-corner,
+.dark::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Firefox scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.4) transparent !important;
+}
+
+.dark,
+.dark * {
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent !important;
+}
+
+/* Custom scrollbar utility classes */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.4) transparent !important;
+}
+
+.dark .custom-scrollbar,
+.custom-scrollbar.dark {
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4) !important;
+  border-radius: 9999px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6) !important;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3) !important;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5) !important;
+}
+
+/* Hidden scrollbar with scroll still enabled */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}

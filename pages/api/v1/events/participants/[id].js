@@ -6,8 +6,11 @@ import getParticipantModel from "@/utils/models/participant.models";
 DBInstance();
 
 export default async function handler(req, res) {
-    const { id } = req.query;
+    const { id, target: rawTarget, collection: rawCollection } = req.query;
     const { method } = req;
+
+    const targetParam = rawTarget || rawCollection || "participants";
+    const cleanTarget = String(targetParam).trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_") || "participants";
 
     if (method === "GET") {
         try {
@@ -19,19 +22,27 @@ export default async function handler(req, res) {
                     .json({ success: false, error: "Event not found" });
             }
 
-            const { database, collection } = event;
-            const db = mongoose.connection.useDb(database);
-            const participantsCollection = collection.participants;
+            const eventDbName = event.database || `prod_${event.slug || id}`;
+            if (!event.database) {
+                event.database = eventDbName;
+                await event.save().catch(() => {});
+            }
+            const db = mongoose.connection.useDb(eventDbName);
+            const targetCollection =
+                (event.collection && event.collection[cleanTarget]) || cleanTarget;
 
-            const Participant = db.model(
-                participantsCollection,
-                new mongoose.Schema({})
-            );
-            const participants = await Participant.find();
+            const TargetModel = getParticipantModel(db, targetCollection);
+            const records = await TargetModel.find({}, { __v: 0 }).lean();
 
-            res.status(200).json({ success: true, data: participants });
+            res.status(200).json({
+                success: true,
+                database: eventDbName,
+                target: cleanTarget,
+                collection: targetCollection,
+                data: records,
+            });
         } catch (error) {
-            console.error("Error fetching participants:", error);
+            console.error("Error fetching records:", error);
             res.status(500).json({
                 success: false,
                 error: "Internal Server Error"
@@ -47,28 +58,33 @@ export default async function handler(req, res) {
                     .json({ success: false, error: "Event not found." });
             }
 
-            const { database, collection } = event;
-            const db = mongoose.connection.useDb(database);
-            const participantsCollection = collection.participants;
+            const eventDbName = event.database || `prod_${event.slug || id}`;
+            if (!event.database) {
+                event.database = eventDbName;
+                await event.save().catch(() => {});
+            }
+            const db = mongoose.connection.useDb(eventDbName);
+            const targetCollection =
+                (event.collection && event.collection[cleanTarget]) || cleanTarget;
 
-            const Participant = getParticipantModel(db, participantsCollection);
+            const TargetModel = getParticipantModel(db, targetCollection);
 
             const { email } = req.body;
-            const updatedParticipant = await Participant.findOneAndUpdate(
+            const updatedRecord = await TargetModel.findOneAndUpdate(
                 { email: email },
                 req.body,
                 { new: true }
             );
 
-            if (!updatedParticipant) {
+            if (!updatedRecord) {
                 return res
                     .status(404)
-                    .json({ success: false, error: "Participant not found." });
+                    .json({ success: false, error: "Record not found." });
             }
 
-            res.status(200).json({ success: true, data: updatedParticipant });
+            res.status(200).json({ success: true, data: updatedRecord });
         } catch (error) {
-            console.error("Error updating participant:", error);
+            console.error("Error updating record:", error);
             res.status(500).json({
                 success: false,
                 error: "Internal Server Error"

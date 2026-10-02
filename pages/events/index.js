@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import Link from "next/link";
 import {
     useToast,
     useDisclosure,
@@ -15,10 +14,13 @@ import {
 import withAuth from "@/components/withAuth";
 import { useTheme } from "@/provider/ThemeProvider";
 import { Themes } from "@/utils/misc/themes";
-import { ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { ToggleLeft, ToggleRight, Trash2, Award, Upload, List, Mail } from "lucide-react";
 import LoadingSpinner from "@/components/shared/Loading";
 import Badge from "@/components/shared/Badge";
 import AddEventModal from "./AddEventModal";
+import CertificateDesignerModal from "@/components/events/CertificateDesignerModal";
+import ImportJsonModal from "@/components/events/ImportJsonModal";
+import RsvpChoiceModal from "@/components/events/RsvpChoiceModal";
 
 const Events = () => {
     const [currentEvents, setCurrentEvents] = useState([]);
@@ -26,6 +28,9 @@ const Events = () => {
     const [loading, setLoading] = useState(true);
     const [showAddEventModal, setShowAddEventModal] = useState(false);
     const [editingEvent, setEditingEvent] = useState(null);
+    const [certEvent, setCertEvent] = useState(null);
+    const [importEvent, setImportEvent] = useState(null);
+    const [rsvpEvent, setRsvpEvent] = useState(null);
     const toast = useToast();
     const { isDark } = useTheme();
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -35,31 +40,93 @@ const Events = () => {
     const [pendingToggleEvent, setPendingToggleEvent] = useState(null);
     const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
 
-    const cleanDate = (dateStr) => {
-        const cleaned = dateStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
-        return cleaned.replace(/(\d+) (\w+) (\d+)/, "$2 $1, $3");
+    const getEventTimestamp = (event) => {
+        if (!event) return 0;
+        const rawDate = event.event_date ? String(event.event_date).trim() : "";
+
+        if (!rawDate) {
+            if (event._id && typeof event._id === "string" && event._id.length >= 8) {
+                const ts = parseInt(event._id.substring(0, 8), 16);
+                if (!isNaN(ts)) return ts * 1000;
+            }
+            return 0;
+        }
+
+        // 1. If it has a date range like "3rd March - 10th March 2026" or "10th - 12th Oct 2025" or "10 to 12 Oct 2025"
+        let dateStr = rawDate;
+        if (dateStr.includes(" - ") || dateStr.includes(" to ") || dateStr.includes("–")) {
+            const parts = dateStr.split(/ - | to |–/);
+            const lastPart = parts[parts.length - 1].trim();
+            // If last part has a year, use it; otherwise append year from the original string
+            if (/\d{4}/.test(lastPart)) {
+                dateStr = lastPart;
+            } else {
+                const yearMatch = rawDate.match(/\b(20\d{2})\b/);
+                if (yearMatch) {
+                    dateStr = `${lastPart} ${yearMatch[1]}`;
+                }
+            }
+        }
+
+        // 2. Check for DD/MM/YY or DD/MM/YYYY or DD-MM-YY(YY) like "17/04/23" or "25-08-2023"
+        const dmyMatch = dateStr.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})$/);
+        if (dmyMatch) {
+            let day = parseInt(dmyMatch[1], 10);
+            let month = parseInt(dmyMatch[2], 10) - 1;
+            let year = parseInt(dmyMatch[3], 10);
+            if (year < 100) year += 2000;
+            const d = new Date(year, month, day);
+            if (!isNaN(d.getTime())) return d.getTime();
+        }
+
+        // 3. Clean ordinals: 12th -> 12, 1st -> 1, 23th -> 23
+        let cleaned = dateStr.replace(/(\d+)(st|nd|rd|th)/gi, "$1").trim();
+
+        // 4. Check if year is missing (e.g. "30th Sep" or "15 March")
+        if (!/\b(20\d{2})\b/.test(cleaned)) {
+            let fallbackYear = new Date().getFullYear();
+            if (event._id && typeof event._id === "string" && event._id.length >= 8) {
+                const idTime = parseInt(event._id.substring(0, 8), 16);
+                if (!isNaN(idTime)) {
+                    fallbackYear = new Date(idTime * 1000).getFullYear();
+                }
+            } else if (event.createdAt) {
+                const t = new Date(event.createdAt).getFullYear();
+                if (!isNaN(t)) fallbackYear = t;
+            }
+            cleaned = `${cleaned} ${fallbackYear}`;
+        }
+
+        // 5. Try standard Date.parse and Date object
+        let parsed = Date.parse(cleaned);
+        if (!isNaN(parsed)) return parsed;
+
+        const direct = new Date(cleaned).getTime();
+        if (!isNaN(direct)) return direct;
+
+        // 6. Fallback to MongoDB _id timestamp
+        if (event._id && typeof event._id === "string" && event._id.length >= 8) {
+            const ts = parseInt(event._id.substring(0, 8), 16);
+            if (!isNaN(ts)) return ts * 1000;
+        }
+        if (event.createdAt) {
+            const t = new Date(event.createdAt).getTime();
+            if (!isNaN(t)) return t;
+        }
+        return 0;
     };
 
     const fetchEvents = async () => {
         try {
             const response = await axios.get("/api/v1/events");
-            let eventsData = response.data.data;
+            let eventsData = response.data.data || [];
 
-            eventsData = eventsData.map((event) => ({
-                ...event,
-                cleaned_date_str: cleanDate(event.event_date),
-                event_date_obj: new Date(cleanDate(event.event_date)),
-            }));
+            const current = eventsData.filter((event) => event.is_active);
+            const past = eventsData.filter((event) => !event.is_active);
 
-            const current = eventsData.filter(
-                (event) => event.is_active
-            );
-            const past = eventsData.filter(
-                (event) => !event.is_active
-            );
-
-            current.sort((a, b) => a.event_date_obj - b.event_date_obj);
-            past.sort((a, b) => b.event_date_obj - a.event_date_obj);
+            // Sort both current and past in descending order (latest events first)
+            current.sort((a, b) => getEventTimestamp(b) - getEventTimestamp(a));
+            past.sort((a, b) => getEventTimestamp(b) - getEventTimestamp(a));
 
             setCurrentEvents(current);
             setPastEvents(past);
@@ -195,8 +262,7 @@ const Events = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {currentEvents.length > 0 ? (
                         currentEvents.map((event) => (
-                            <Link href={`/events/${event.slug}`} key={event._id}>
-                                <div className="group cursor-pointer bg-light-background-light dark:bg-dark-background-light shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 h-full flex flex-col">
+                            <div key={event._id} className="group bg-light-background-light dark:bg-dark-background-light shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl h-full flex flex-col">
                                     <div className="relative overflow-hidden">
                                         <img
                                             src={event.poster_url}
@@ -269,38 +335,70 @@ const Events = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-                                            <div className="flex gap-2">
-                                                <span className="inline-flex items-center justify-center gap-2 flex-1 bg-dark-accent text-black px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:opacity-90">
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                    </svg>
-                                                    Manage RSVP
-                                                </span>
+                                        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                                            <div className="grid grid-cols-3 gap-2">
                                                 <button
                                                     type="button"
-                                                    title={event.is_active ? "Set event inactive" : "Set event active"}
+                                                    title="RSVP Options"
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        requestToggle(event);
+                                                        setRsvpEvent(event);
                                                     }}
-                                                    className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-white transition-all duration-200 ${event.is_active
-                                                            ? "bg-red-500 hover:bg-red-600"
-                                                            : "bg-green-500 hover:bg-green-600"
-                                                        }`}
+                                                    className="inline-flex items-center justify-center gap-1 bg-dark-accent hover:opacity-90 text-black px-2 py-2 rounded-lg font-semibold transition-all duration-200 text-xs sm:text-sm shadow-sm"
                                                 >
-                                                    {event.is_active
-                                                            ? <ToggleRight className="w-5 h-5" />
-                                                            : <ToggleLeft className="w-5 h-5" />
-                                                        }
-                                                    {event.is_active ? "Inactivate" : "Activate"}
+                                                    <Mail className="w-3.5 h-3.5 shrink-0" />
+                                                    <span>RSVP</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    title="Certificates"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setCertEvent(event);
+                                                    }}
+                                                    className="inline-flex items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 text-black px-2 py-2 rounded-lg font-semibold transition-all duration-200 text-xs sm:text-sm shadow-sm"
+                                                >
+                                                    <Award className="w-3.5 h-3.5 shrink-0" />
+                                                    <span>Certificate</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    title="List"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setImportEvent(event);
+                                                    }}
+                                                    className="inline-flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-2 py-2 rounded-lg font-semibold transition-all duration-200 text-xs sm:text-sm shadow-sm"
+                                                >
+                                                    <List className="w-3.5 h-3.5 shrink-0" />
+                                                    <span>List</span>
                                                 </button>
                                             </div>
+                                            <button
+                                                type="button"
+                                                title={event.is_active ? "Set event inactive" : "Set event active"}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    requestToggle(event);
+                                                }}
+                                                className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-white transition-all duration-200 text-xs sm:text-sm ${event.is_active
+                                                        ? "bg-red-500 hover:bg-red-600"
+                                                        : "bg-green-500 hover:bg-green-600"
+                                                    }`}
+                                            >
+                                                {event.is_active
+                                                        ? <ToggleRight className="w-4 h-4 shrink-0" />
+                                                        : <ToggleLeft className="w-4 h-4 shrink-0" />
+                                                    }
+                                                <span>{event.is_active ? "Inactivate Event" : "Activate Event"}</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                            </Link>
                         ))
                     ) : (
                         <div className="col-span-full flex justify-center items-center py-20">
@@ -328,8 +426,7 @@ const Events = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {pastEvents.length > 0 ? (
                         pastEvents.map((event) => (
-                            <Link href={`/events/${event.slug}`} key={event._id}>
-                                <div className="group cursor-pointer bg-light-background-light dark:bg-dark-side shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-2 opacity-90 hover:opacity-100 h-full flex flex-col">
+                            <div key={event._id} className="group bg-light-background-light dark:bg-dark-side shadow-xl rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl opacity-90 hover:opacity-100 h-full flex flex-col">
                                     <div className="relative overflow-hidden">
                                         <img
                                             src={event.poster_url}
@@ -402,38 +499,70 @@ const Events = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-                                            <div className="flex gap-2">
-                                                <span className="inline-flex items-center justify-center gap-2 flex-1 bg-dark-accent text-black px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:opacity-90">
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                    </svg>
-                                                    Manage RSVP
-                                                </span>
+                                        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                                            <div className="grid grid-cols-3 gap-2">
                                                 <button
                                                     type="button"
-                                                    title={event.is_active ? "Set event inactive" : "Set event active"}
+                                                    title="RSVP Options"
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        requestToggle(event);
+                                                        setRsvpEvent(event);
                                                     }}
-                                                    className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-white transition-all duration-200 ${event.is_active
-                                                            ? "bg-red-500 hover:bg-red-600"
-                                                            : "bg-green-500 hover:bg-green-600"
-                                                        }`}
+                                                    className="inline-flex items-center justify-center gap-1 bg-dark-accent hover:opacity-90 text-black px-2 py-2 rounded-lg font-semibold transition-all duration-200 text-xs sm:text-sm shadow-sm"
                                                 >
-                                                    {event.is_active
-                                                            ? <ToggleRight className="w-5 h-5" />
-                                                            : <ToggleLeft className="w-5 h-5" />
-                                                        }
-                                                    {event.is_active ? "Inactivate" : "Activate"}
+                                                    <Mail className="w-3.5 h-3.5 shrink-0" />
+                                                    <span>RSVP</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    title="Certificates"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setCertEvent(event);
+                                                    }}
+                                                    className="inline-flex items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 text-black px-2 py-2 rounded-lg font-semibold transition-all duration-200 text-xs sm:text-sm shadow-sm"
+                                                >
+                                                    <Award className="w-3.5 h-3.5 shrink-0" />
+                                                    <span>Certificate</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    title="List"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setImportEvent(event);
+                                                    }}
+                                                    className="inline-flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-2 py-2 rounded-lg font-semibold transition-all duration-200 text-xs sm:text-sm shadow-sm"
+                                                >
+                                                    <List className="w-3.5 h-3.5 shrink-0" />
+                                                    <span>List</span>
                                                 </button>
                                             </div>
+                                            <button
+                                                type="button"
+                                                title={event.is_active ? "Set event inactive" : "Set event active"}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    requestToggle(event);
+                                                }}
+                                                className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-white transition-all duration-200 text-xs sm:text-sm ${event.is_active
+                                                        ? "bg-red-500 hover:bg-red-600"
+                                                        : "bg-green-500 hover:bg-green-600"
+                                                    }`}
+                                            >
+                                                {event.is_active
+                                                        ? <ToggleRight className="w-4 h-4 shrink-0" />
+                                                        : <ToggleLeft className="w-4 h-4 shrink-0" />
+                                                    }
+                                                <span>{event.is_active ? "Inactivate Event" : "Activate Event"}</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                            </Link>
                         ))
                     ) : (
                         <div className="col-span-full flex justify-center items-center py-20">
@@ -446,6 +575,31 @@ const Events = () => {
                     )}
                 </div>
             </div>
+
+            {certEvent && (
+                <CertificateDesignerModal
+                    event={certEvent}
+                    onClose={() => setCertEvent(null)}
+                    onSaved={() => {
+                        fetchEvents();
+                    }}
+                />
+            )}
+
+            {importEvent && (
+                <ImportJsonModal
+                    slug={importEvent.slug}
+                    event={importEvent}
+                    onClose={() => setImportEvent(null)}
+                />
+            )}
+
+            {rsvpEvent && (
+                <RsvpChoiceModal
+                    event={rsvpEvent}
+                    onClose={() => setRsvpEvent(null)}
+                />
+            )}
 
             {(showAddEventModal || editingEvent) && (
                 <AddEventModal
