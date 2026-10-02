@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
     Award,
-    Type,
     Move,
     Eye,
     EyeOff,
@@ -14,8 +13,6 @@ import {
     Trash2,
 } from "lucide-react";
 import {
-    CURATED_FONTS,
-    loadWebFont,
     getSampleCertificateTemplate,
 } from "@/utils/misc/certificateFonts";
 
@@ -99,19 +96,6 @@ const CertificateDesigner = ({
         }
     }, [visibleKeys, activeTemplateKey]);
 
-    // Font state
-    const [customFontInput, setCustomFontInput] = useState(
-        jimp_config.custom_font_url || ""
-    );
-    const [customFontNameInput, setCustomFontNameInput] = useState(
-        jimp_config.font_family || "CustomFont"
-    );
-    const [fontStatus, setFontStatus] = useState({ state: "idle", message: "" });
-    const [isCustomFontMode, setIsCustomFontMode] = useState(
-        Boolean(jimp_config.custom_font_url) ||
-        !CURATED_FONTS.some((f) => f.name === jimp_config.font_family)
-    );
-
     // Preview state
     const [sampleName, setSampleName] = useState("Johnathan Doe");
     const [showGuides, setShowGuides] = useState(true);
@@ -129,7 +113,7 @@ const CertificateDesigner = ({
     const xOffset = parseInt(jimp_config.xOffset ?? "0", 10) || 0;
     const fontSize = parseInt(jimp_config.font_size ?? "64", 10) || 64;
     const color = jimp_config.color || "white";
-    const fontFamily = jimp_config.font_family || "Open Sans";
+    const fontFamily = "'Open Sans', sans-serif";
     const fontWeight = jimp_config.font_weight || "bold";
     const letterSpacing = parseInt(jimp_config.letter_spacing ?? "0", 10) || 0;
     const textCase = jimp_config.text_case || "capitalize";
@@ -140,77 +124,6 @@ const CertificateDesigner = ({
             onBatchChangeJimpConfig(updates);
         } else {
             Object.entries(updates).forEach(([k, v]) => onChangeJimpConfig(k, v));
-        }
-    };
-
-    // Load active font on mount & font changes
-    useEffect(() => {
-        let isMounted = true;
-        const fontName = jimp_config.font_family || "Open Sans";
-        const fontUrl = jimp_config.custom_font_url || "";
-
-        loadWebFont(fontName, fontUrl)
-            .then((success) => {
-                if (isMounted && !success) {
-                    setFontStatus({ state: "error", message: `Could not load font "${fontName}"` });
-                }
-            })
-            .catch(() => {
-                if (isMounted) {
-                    setFontStatus({ state: "error", message: "Error loading font" });
-                }
-            });
-
-        return () => {
-            isMounted = false;
-        };
-    }, [jimp_config.font_family, jimp_config.custom_font_url]);
-
-    const handleCuratedFontChange = (fontName) => {
-        if (fontName === "CUSTOM") {
-            setIsCustomFontMode(true);
-            updateJimp({
-                font_family: customFontNameInput || "CustomFont",
-                custom_font_url: customFontInput || "",
-            });
-        } else {
-            setIsCustomFontMode(false);
-            updateJimp({
-                font_family: fontName,
-                custom_font_url: "",
-            });
-            loadWebFont(fontName);
-        }
-    };
-
-    const handleApplyCustomFont = async () => {
-        if (!customFontInput.trim()) return;
-        const url = customFontInput.trim();
-        let fontName = customFontNameInput.trim();
-        if (!fontName || fontName === "CustomFont") {
-            const match = url.match(/\/([^/?#]+)\.(ttf|otf|woff2?)/i);
-            if (match && match[1]) {
-                fontName = decodeURIComponent(match[1]).replace(/[^a-zA-Z0-9_-]/g, " ").trim();
-            } else {
-                fontName = "CustomFont";
-            }
-            setCustomFontNameInput(fontName);
-        }
-
-        setFontStatus({ state: "loading", message: "Loading font from ImageKit..." });
-        const success = await loadWebFont(fontName, url);
-        if (success) {
-            updateJimp({
-                font_family: fontName,
-                custom_font_url: url,
-            });
-            setFontStatus({ state: "success", message: `Font "${fontName}" applied successfully!` });
-            setTimeout(() => setFontStatus({ state: "idle", message: "" }), 3000);
-        } else {
-            setFontStatus({
-                state: "error",
-                message: "Failed to load font. Please ensure the ImageKit URL is public (.ttf / .otf).",
-            });
         }
     };
 
@@ -419,7 +332,16 @@ const CertificateDesigner = ({
     };
 
     const handleCopyConfig = () => {
-        const payload = JSON.stringify(jimp_config, null, 2);
+        const payload = JSON.stringify(
+            {
+                yOffset: String(yOffset),
+                xOffset: String(xOffset),
+                color: color,
+                font_size: String(fontSize),
+            },
+            null,
+            2
+        );
         navigator.clipboard.writeText(payload);
         setCopiedConfig(true);
         setTimeout(() => setCopiedConfig(false), 2000);
@@ -606,114 +528,16 @@ const CertificateDesigner = ({
                         )}
                     </div>
 
-                    {/* SECTION 2: FONT & TYPOGRAPHY */}
+                    {/* SECTION 2: TEXT & STYLE */}
                     <div className="p-4 rounded-xl bg-gray-50/70 dark:bg-dark-background-dark/40 border border-gray-200 dark:border-gray-800 space-y-3.5">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                Font & Style
+                                Text Style
                             </span>
-                            {fontStatus.message && (
-                                <span className={`text-[11px] truncate max-w-[180px] ${
-                                    fontStatus.state === "error" ? "text-red-400" : "text-green-500"
-                                }`}>
-                                    {fontStatus.message}
-                                </span>
-                            )}
+                            <span className="text-[11px] text-gray-400 font-mono">
+                                Font: Open Sans
+                            </span>
                         </div>
-
-                        {/* Font Family Dropdown */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                                Font Family
-                            </label>
-                            <select
-                                value={isCustomFontMode ? "CUSTOM" : fontFamily}
-                                onChange={(e) => handleCuratedFontChange(e.target.value)}
-                                className="w-full bg-white dark:bg-dark-background-light border border-gray-300 dark:border-gray-700 px-3 py-1.5 rounded-lg text-xs text-light-color dark:text-dark-color focus:outline-none focus:ring-1 focus:ring-dark-accent"
-                            >
-                                <optgroup label="Certificate & Calligraphy Fonts">
-                                    {CURATED_FONTS.map((f) => (
-                                        <option key={f.name} value={f.name}>
-                                            {f.name} — {f.category}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                                <optgroup label="Custom Font">
-                                    <option value="CUSTOM">+ Add Custom Font (URL / Web Font)</option>
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        {/* Custom Font Configuration Drawer */}
-                        {isCustomFontMode && (
-                            <div className="p-3 rounded-xl bg-light-background-darker dark:bg-dark-background-darker border border-dark-accent/30 space-y-2.5 text-xs">
-                                <div className="flex items-center justify-between">
-                                    <span className="font-semibold text-light-color dark:text-dark-color flex items-center gap-1.5">
-                                        <Type className="w-3.5 h-3.5 text-dark-accent" />
-                                        ImageKit Custom Font
-                                    </span>
-                                    <span className="text-[10px] text-gray-500 font-mono">
-                                        .ttf &bull; .otf &bull; .woff2
-                                    </span>
-                                </div>
-
-                                {/* Font Name */}
-                                <div>
-                                    <label className="text-[11px] text-gray-500 dark:text-gray-400 block mb-1">
-                                        Font Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Cinzel-Bold or SignatureFont"
-                                        value={customFontNameInput}
-                                        onChange={(e) => setCustomFontNameInput(e.target.value)}
-                                        className="w-full bg-light-background-light dark:bg-dark-background-light border border-gray-300 dark:border-gray-700 px-2.5 py-1.5 rounded-lg text-xs font-mono text-light-color dark:text-dark-color focus:outline-none focus:ring-1 focus:ring-dark-accent"
-                                    />
-                                </div>
-
-                                {/* ImageKit Font URL */}
-                                <div>
-                                    <label className="text-[11px] text-gray-500 dark:text-gray-400 block mb-1">
-                                        ImageKit Font URL (.ttf / .otf)
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            placeholder="https://ik.imagekit.io/.../font.ttf"
-                                            value={customFontInput}
-                                            onChange={(e) => setCustomFontInput(e.target.value)}
-                                            className="flex-1 bg-light-background-light dark:bg-dark-background-light border border-gray-300 dark:border-gray-700 px-2.5 py-1.5 rounded-lg text-xs font-mono text-light-color dark:text-dark-color focus:outline-none focus:ring-1 focus:ring-dark-accent"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleApplyCustomFont}
-                                            disabled={!customFontInput.trim()}
-                                            className="px-3 py-1.5 rounded-lg bg-dark-accent text-black font-semibold text-xs hover:opacity-90 disabled:opacity-50 shrink-0"
-                                        >
-                                            Apply
-                                        </button>
-                                    </div>
-                                    <p className="text-[10px] text-gray-400 mt-1">
-                                        Upload your font to ImageKit and paste the URL here.
-                                    </p>
-                                </div>
-
-                                {/* Status message */}
-                                {fontStatus.message && (
-                                    <div
-                                        className={`p-2 rounded-lg text-[11px] flex items-center gap-1.5 ${
-                                            fontStatus.state === "success"
-                                                ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
-                                                : fontStatus.state === "error"
-                                                ? "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
-                                                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
-                                        }`}
-                                    >
-                                        <span>{fontStatus.message}</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
 
                         {/* Font Size & Weight Grid */}
                         <div className="grid grid-cols-2 gap-3">
@@ -725,11 +549,17 @@ const CertificateDesigner = ({
                                 <div className="flex items-center gap-2">
                                     <input
                                         type="range"
-                                        min="24"
-                                        max="120"
+                                        min="16"
+                                        max="128"
                                         value={fontSize}
                                         onChange={(e) => updateJimp({ font_size: e.target.value })}
                                         className="w-full accent-dark-accent cursor-pointer"
+                                    />
+                                    <input
+                                        type="number"
+                                        value={fontSize}
+                                        onChange={(e) => updateJimp({ font_size: e.target.value })}
+                                        className="w-14 bg-white dark:bg-dark-background-light border border-gray-300 dark:border-gray-700 px-1 py-0.5 rounded text-xs text-center font-mono"
                                     />
                                 </div>
                             </div>
@@ -744,10 +574,7 @@ const CertificateDesigner = ({
                                     className="w-full bg-white dark:bg-dark-background-light border border-gray-300 dark:border-gray-700 px-2.5 py-1.5 rounded-lg text-xs"
                                 >
                                     <option value="normal">Normal (400)</option>
-                                    <option value="500">Medium (500)</option>
-                                    <option value="600">Semi-Bold (600)</option>
                                     <option value="bold">Bold (700)</option>
-                                    <option value="800">Extra Bold (800)</option>
                                 </select>
                             </div>
                         </div>
