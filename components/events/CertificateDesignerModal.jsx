@@ -24,12 +24,6 @@ const CertificateDesignerModal = ({
         xOffset: event?.jimp_config?.xOffset ?? "0",
         color: event?.jimp_config?.color || "white",
         font_size: event?.jimp_config?.font_size ?? "64",
-        font_family: event?.jimp_config?.font_family || "Open Sans",
-        custom_font_url: event?.jimp_config?.custom_font_url || "",
-        font_weight: event?.jimp_config?.font_weight || "bold",
-        letter_spacing: event?.jimp_config?.letter_spacing ?? "0",
-        text_case: event?.jimp_config?.text_case || "capitalize",
-        alignment: event?.jimp_config?.alignment || "center",
         ...(event?.jimp_config || {}),
     }));
 
@@ -78,7 +72,7 @@ const CertificateDesignerModal = ({
             showToast(
                 "success",
                 "Saved Successfully",
-                "Certificate templates and font configurations updated."
+                "Certificate templates and text configurations updated."
             );
             onSaved(response.data.data || { ...event, certificate, jimp_config: jimpConfig });
             onClose();
@@ -151,8 +145,9 @@ const CertificateDesignerModal = ({
                 <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between bg-light-background-dark/30 dark:bg-dark-background-dark/30">
                     <div className="text-xs text-gray-500 font-mono">
                         Y Offset: <span className="text-dark-accent font-bold">{jimpConfig.yOffset}px</span> | X Offset:{" "}
-                        <span className="text-dark-accent font-bold">{jimpConfig.xOffset}px</span> | Font:{" "}
-                        <span className="text-dark-accent font-bold">{jimpConfig.font_family}</span>
+                        <span className="text-dark-accent font-bold">{jimpConfig.xOffset}px</span> | Size:{" "}
+                        <span className="text-dark-accent font-bold">{jimpConfig.font_size}px</span> | Color:{" "}
+                        <span className="text-dark-accent font-bold">{jimpConfig.color}</span>
                     </div>
 
                     <div className="flex items-center gap-3">

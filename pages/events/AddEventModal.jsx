@@ -35,12 +35,6 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
             xOffset: "0",
             color: "white",
             font_size: "64",
-            font_family: "Open Sans",
-            custom_font_url: "",
-            font_weight: "bold",
-            letter_spacing: "0",
-            text_case: "capitalize",
-            alignment: "center",
         },
     };
 
@@ -811,25 +805,6 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
                                         />
                                     </div>
                                     <div>
-                                        <label className={labelCls}>X Offset</label>
-                                        <input
-                                            type="number"
-                                            placeholder="0"
-                                            value={formData.jimp_config.xOffset ?? "0"}
-                                            onChange={(e) => handleNestedChange("jimp_config", "xOffset", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelCls}>Font Family</label>
-                                        <input
-                                            placeholder="Open Sans"
-                                            value={formData.jimp_config.font_family ?? "Open Sans"}
-                                            onChange={(e) => handleNestedChange("jimp_config", "font_family", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                    <div>
                                         <label className={labelCls}>Text Color</label>
                                         <input
                                             placeholder="white"
@@ -845,15 +820,6 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
                                             placeholder="64"
                                             value={formData.jimp_config.font_size}
                                             onChange={(e) => handleNestedChange("jimp_config", "font_size", e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelCls}>Custom Font URL (Optional)</label>
-                                        <input
-                                            placeholder="https://fonts.googleapis.com/... or .ttf url"
-                                            value={formData.jimp_config.custom_font_url ?? ""}
-                                            onChange={(e) => handleNestedChange("jimp_config", "custom_font_url", e.target.value)}
                                             className={inputCls}
                                         />
                                     </div>

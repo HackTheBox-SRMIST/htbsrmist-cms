@@ -78,12 +78,6 @@ const eventSchema = new mongoose.Schema({
       xOffset: "0",
       color: "white",
       font_size: "64",
-      font_family: "Open Sans",
-      custom_font_url: "",
-      font_weight: "bold",
-      letter_spacing: "0",
-      text_case: "capitalize",
-      alignment: "center",
     },
   },
 });
