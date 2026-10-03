@@ -116,9 +116,23 @@ export default async function handler(req, res) {
         });
       }
 
+      // 🧩 Normalize gallery if present
+      let normalizedGallery = [];
+      if (Array.isArray(eventData.gallery)) {
+        normalizedGallery = eventData.gallery
+          .map((s) => (typeof s === "string" ? s.trim() : s?.url?.trim() || ""))
+          .filter(Boolean);
+      } else if (typeof eventData.gallery === "string") {
+        normalizedGallery = eventData.gallery
+          .split(/[\n,]+/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
       // 🧩 Create new event dynamically
       const payload = {
         ...eventData,
+        gallery: normalizedGallery,
         teamSize: eventData.teamEvent ? Number(eventData.teamSize) : null
       };
 

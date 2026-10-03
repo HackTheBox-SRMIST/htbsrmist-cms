@@ -22,7 +22,21 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "PATCH") {
     try {
-      const event = await Event.findOneAndUpdate({ slug }, req.body, {
+      const updateData = { ...req.body };
+      if (updateData.gallery !== undefined) {
+        if (Array.isArray(updateData.gallery)) {
+          updateData.gallery = updateData.gallery
+            .map((s) => (typeof s === "string" ? s.trim() : s?.url?.trim() || ""))
+            .filter(Boolean);
+        } else if (typeof updateData.gallery === "string") {
+          updateData.gallery = updateData.gallery
+            .split(/[\n,]+/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+      }
+
+      const event = await Event.findOneAndUpdate({ slug }, updateData, {
         new: true,
       });
 
