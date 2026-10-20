@@ -88,28 +88,31 @@ const getSocialHint = (val) => {
     return `Looks like ${platformLabel} URL`;
 };
 
+const initialFormState = {
+    index: "",
+    usn: "",
+    name: "",
+    domain: "",
+    caption: "",
+    pictureUrl: "",
+    isCurrent: true,
+    status: [{ position: "", joined: "" }],
+    socials: {
+        github: "",
+        website: "",
+        linkedin: "",
+        twitter: "",
+        srmMailID: ""
+    }
+};
+
 const AddNew = ({ onSuccess, existingYears = [] }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
     const [picImgError, setPicImgError] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
-    const [formData, setFormData] = useState({
-        index: "",
-        usn: "",
-        name: "",
-        domain: "",
-        caption: "",
-        pictureUrl: "",
-        isCurrent: true,
-        status: [{ position: "", joined: "" }],
-        socials: {
-            github: "",
-            website: "",
-            linkedin: "",
-            twitter: "",
-            srmMailID: ""
-        }
-    });
+    const [formData, setFormData] = useState(initialFormState);
 
     const handleChange = (e) => {
         const { name, value, checked, type } = e.target;
@@ -165,6 +168,32 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
     };
 
     const handleSubmit = async () => {
+        if (submitting) return;
+
+        const trimmedUsn = (formData.usn || "").trim();
+        if (!trimmedUsn) {
+            toast({
+                title: "Missing RA Number",
+                description: "Please enter the member's RA Number / USN.",
+                status: "warning",
+                duration: 5000,
+                isClosable: true
+            });
+            return;
+        }
+
+        const trimmedName = (formData.name || "").trim();
+        if (!trimmedName) {
+            toast({
+                title: "Missing Name",
+                description: "Please enter the member's name.",
+                status: "warning",
+                duration: 5000,
+                isClosable: true
+            });
+            return;
+        }
+
         const enteredYears = (formData.status || [])
             .map((s) => String(s.joined).trim())
             .filter(Boolean);
@@ -184,9 +213,12 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
             return;
         }
 
+        setSubmitting(true);
         try {
             const payload = {
                 ...formData,
+                usn: trimmedUsn,
+                name: trimmedName,
                 index:
                     formData.index === "" ||
                     formData.index === null ||
@@ -212,17 +244,24 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
                 duration: 5000,
                 isClosable: true
             });
+            setFormData(initialFormState);
             onClose();
             if (onSuccess) onSuccess();
         } catch (error) {
+            console.error("Error adding member:", error);
+            const errorMsg =
+                error.response?.data?.error ||
+                error.message ||
+                "There was an error adding the member.";
             toast({
-                title: "Error",
-                description: "There was an error adding the member.",
+                title: error.response?.status === 409 ? "Member Already Exists" : "Error",
+                description: errorMsg,
                 status: "error",
-                duration: 5000,
+                duration: 6000,
                 isClosable: true
             });
-            console.error("Error adding member:", error);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -252,11 +291,11 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
                             </FormControl>
 
                             <FormControl isRequired>
-                                <FormLabel htmlFor="usn">USN</FormLabel>
+                                <FormLabel htmlFor="usn">RA Number / USN</FormLabel>
                                 <Input
                                     id="usn"
                                     name="usn"
-                                    placeholder="Add reg number here"
+                                    placeholder="Add reg / RA number here (e.g. RA2211003010001)"
                                     value={formData.usn}
                                     onChange={handleChange}
                                 />
@@ -582,10 +621,16 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
                     </ModalBody>
 
                     <ModalFooter>
-                        <Button variant="ghost" onClick={onClose}>
+                        <Button variant="ghost" onClick={onClose} isDisabled={submitting}>
                             Cancel
                         </Button>
-                        <Button colorScheme="teal" onClick={handleSubmit}>
+                        <Button
+                            colorScheme="teal"
+                            onClick={handleSubmit}
+                            isLoading={submitting}
+                            loadingText="Saving..."
+                            isDisabled={submitting}
+                        >
                             Save
                         </Button>
                     </ModalFooter>
