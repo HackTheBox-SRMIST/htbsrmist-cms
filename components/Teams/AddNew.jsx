@@ -10,6 +10,7 @@ import {
     ModalFooter,
     FormControl,
     FormLabel,
+    FormErrorMessage,
     Input,
     InputGroup,
     InputLeftElement,
@@ -31,7 +32,6 @@ import {
     isImageUrl,
     getTransformedImageUrl
 } from "@/utils/misc/socialUrls";
-import { buildYearOptions, formatTeamYear } from "@/utils/misc/years";
 
 const renderWebsiteOrInstaIcon = (val) => {
     const trimmed = val?.trim();
@@ -111,11 +111,6 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
         }
     });
 
-    const yearOptions = useMemo(
-        () => buildYearOptions(existingYears),
-        [existingYears]
-    );
-
     const handleChange = (e) => {
         const { name, value, checked, type } = e.target;
         if (type === "checkbox") {
@@ -138,7 +133,7 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
             const next = [...formData.status];
             next[idx] = {
                 ...next[idx],
-                [key]: key === "joined" ? value.replace(/[^0-9]/g, "") : value
+                [key]: key === "joined" ? value.replace(/[^0-9]/g, "").slice(0, 4) : value
             };
             setFormData({ ...formData, status: next });
         } else {
@@ -160,7 +155,35 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
         }));
     };
 
+    const isDuplicateYear = (year, rowIndex) => {
+        if (!year) return false;
+        const yStr = String(year).trim();
+        if (!yStr) return false;
+        return (formData.status || []).some(
+            (s, idx) => idx !== rowIndex && String(s.joined).trim() === yStr
+        );
+    };
+
     const handleSubmit = async () => {
+        const enteredYears = (formData.status || [])
+            .map((s) => String(s.joined).trim())
+            .filter(Boolean);
+
+        const duplicates = enteredYears.filter(
+            (yr, idx) => enteredYears.indexOf(yr) !== idx
+        );
+
+        if (duplicates.length > 0) {
+            toast({
+                title: "Duplicate Year Entry",
+                description: `Year ${duplicates[0]} already exists in status history. You cannot add multiple positions for the same year—please modify the existing entry instead.`,
+                status: "warning",
+                duration: 5000,
+                isClosable: true
+            });
+            return;
+        }
+
         try {
             const payload = {
                 ...formData,
@@ -320,20 +343,31 @@ const AddNew = ({ onSuccess, existingYears = [] }) => {
                                                 </option>
                                             </Select>
                                         </FormControl>
-                                        <FormControl isRequired>
+                                        <FormControl isRequired isInvalid={isDuplicateYear(row.joined, i)}>
                                             <FormLabel>Year</FormLabel>
-                                            <Select
+                                            <Input
+                                                type="number"
                                                 name={`status.${i}.joined`}
-                                                placeholder="Select year"
+                                                placeholder="e.g. 2026"
                                                 value={row.joined}
                                                 onChange={handleChange}
-                                            >
-                                                {yearOptions.map((yr) => (
-                                                    <option key={yr} value={yr}>
-                                                        {formatTeamYear(yr)}
-                                                    </option>
-                                                ))}
-                                            </Select>
+                                                onInput={(e) => {
+                                                    if (e.target.value.length > 4) {
+                                                        e.target.value = e.target.value.slice(0, 4);
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                max={9999}
+                                            />
+                                            {isDuplicateYear(row.joined, i) && (
+                                                <FormErrorMessage>
+                                                    Year {row.joined} already exists. Please modify that entry instead.
+                                                </FormErrorMessage>
+                                            )}
                                         </FormControl>
                                         <Button
                                             onClick={() => removeStatusRow(i)}

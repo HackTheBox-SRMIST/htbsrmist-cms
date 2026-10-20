@@ -19,10 +19,25 @@ async function newTeams(req, res) {
             }
         }
         // Ensure joined numbers are numbers
-        body.status = body.status.map((s) => ({
-            position: String(s.position),
-            joined: Number(s.joined)
-        }));
+        body.status = body.status
+            .filter((s) => s && s.position && s.joined !== "" && !isNaN(Number(s.joined)))
+            .map((s) => ({
+                position: String(s.position).trim(),
+                joined: Number(s.joined)
+            }));
+
+        // Validate no duplicate years in status history
+        const seenYears = new Set();
+        for (const s of body.status) {
+            const yr = Number(s.joined);
+            if (seenYears.has(yr)) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Year ${s.joined} already exists in status history. A member cannot have multiple positions for the same year.`
+                });
+            }
+            seenYears.add(yr);
+        }
 
         const team = new Team(body);
         await team.save();

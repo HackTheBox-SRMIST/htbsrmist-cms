@@ -1,9 +1,8 @@
 import Event from "@/utils/models/event.models";
 import DBInstance from "@/utils/db";
-// Connection managed inside handler
+DBInstance();
 
 export default async function handler(req, res) {
-  await DBInstance();
   const { slug } = req.query;
 
   if (req.method === "GET") {
