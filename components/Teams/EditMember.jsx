@@ -31,7 +31,6 @@ import {
     isImageUrl,
     getTransformedImageUrl
 } from "@/utils/misc/socialUrls";
-import { buildYearOptions, formatTeamYear } from "@/utils/misc/years";
 
 const renderWebsiteOrInstaIcon = (val) => {
     const trimmed = val?.trim();
@@ -284,45 +283,24 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
                                     spacing={3}
                                     key={i}
                                 >
-                                    <FormControl>
+                                    <FormControl isRequired>
                                         <FormLabel>Position</FormLabel>
-                                        <Select
+                                        <Input
                                             name={`status.${i}.position`}
+                                            placeholder="e.g. Lead, Sudoer, Root, Binary"
                                             value={row.position || ""}
                                             onChange={handleInputChange}
-                                        >
-                                            <option value="Mainframe">
-                                                Mainframe
-                                            </option>
-                                            <option value="Kernel">
-                                                Kernel
-                                            </option>
-                                            <option value="Root">Root</option>
-                                            <option value="Sudoer">
-                                                Sudoer
-                                            </option>
-                                            <option value="Sticky Bit">
-                                                Sticky Bit
-                                            </option>
-                                            <option value="Binary">
-                                                Binary
-                                            </option>
-                                        </Select>
+                                        />
                                     </FormControl>
-                                    <FormControl>
+                                    <FormControl isRequired>
                                         <FormLabel>Year</FormLabel>
-                                        <Select
+                                        <Input
+                                            type="number"
                                             name={`status.${i}.joined`}
-                                            placeholder="Select year"
+                                            placeholder="e.g. 2026"
                                             value={row.joined || ""}
                                             onChange={handleInputChange}
-                                        >
-                                            {yearOptions.map((yr) => (
-                                                <option key={yr} value={yr}>
-                                                    {formatTeamYear(yr)}
-                                                </option>
-                                            ))}
-                                        </Select>
+                                        />
                                     </FormControl>
                                     <Button
                                         onClick={() => removeStatusRow(i)}
