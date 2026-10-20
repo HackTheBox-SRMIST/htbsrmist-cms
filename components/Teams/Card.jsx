@@ -184,7 +184,7 @@ const TeamCard = ({ team, onDelete, onEdit, existingYears = [] }) => {
                     {/* Admin controls: Current badge + Edit/Delete buttons */}
                     <div className="w-full flex items-center justify-between pt-1.5 sm:pt-2 px-1 border-t border-black/10 dark:border-white/5 mt-1 gap-1">
                         <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold ${
+                            className={`px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold shrink-0 ${
                                 team.isCurrent
                                     ? "dark:bg-dark-success-background bg-light-success-background dark:text-dark-success-color text-light-success-color"
                                     : "dark:bg-dark-warn-background bg-light-error-background dark:text-dark-error-color text-light-error-color"
@@ -192,11 +192,21 @@ const TeamCard = ({ team, onDelete, onEdit, existingYears = [] }) => {
                         >
                             {team.isCurrent ? "Current" : "Past"}
                         </span>
-                        <ButtonGroup size="xs" spacing="1">
-                            <Button size="xs" colorScheme="blue" onClick={onOpen}>
+                        <ButtonGroup size="sm" spacing="1.5">
+                            <Button
+                                size="sm"
+                                colorScheme="blue"
+                                px={{ base: 3, sm: 3.5 }}
+                                onClick={onOpen}
+                            >
                                 Edit
                             </Button>
-                            <Button size="xs" colorScheme="red" onClick={onDeleteOpen}>
+                            <Button
+                                size="sm"
+                                colorScheme="red"
+                                px={{ base: 2, sm: 2.5 }}
+                                onClick={onDeleteOpen}
+                            >
                                 Delete
                             </Button>
                         </ButtonGroup>

@@ -10,6 +10,7 @@ import {
     Button,
     FormControl,
     FormLabel,
+    FormErrorMessage,
     Input,
     InputGroup,
     InputLeftElement,
@@ -31,7 +32,6 @@ import {
     isImageUrl,
     getTransformedImageUrl
 } from "@/utils/misc/socialUrls";
-import { buildYearOptions, formatTeamYear } from "@/utils/misc/years";
 
 const renderWebsiteOrInstaIcon = (val) => {
     const trimmed = val?.trim();
@@ -120,20 +120,6 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
         }
     }, [isOpen, team]);
 
-    const yearOptions = useMemo(() => {
-        const memberYears = [...existingYears];
-        if (Array.isArray(formData.status) && formData.status.length > 0) {
-            formData.status.forEach((s) => {
-                const yr = Number(s?.joined);
-                if (yr) memberYears.push(yr);
-            });
-        } else if (formData.joined) {
-            const yr = Number(formData.joined);
-            if (yr) memberYears.push(yr);
-        }
-        return buildYearOptions(memberYears);
-    }, [existingYears, formData.status, formData.joined]);
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (name === "pictureUrl") {
@@ -160,7 +146,7 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
                     ...next[idx],
                     [key]:
                         key === "joined"
-                            ? e.target.value.replace(/[^0-9]/g, "")
+                            ? e.target.value.replace(/[^0-9]/g, "").slice(0, 4)
                             : value
                 };
                 return { ...prevData, status: next };
@@ -187,7 +173,35 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
         }));
     };
 
+    const isDuplicateYear = (year, rowIndex) => {
+        if (!year) return false;
+        const yStr = String(year).trim();
+        if (!yStr) return false;
+        return (formData.status || []).some(
+            (s, idx) => idx !== rowIndex && String(s?.joined).trim() === yStr
+        );
+    };
+
     const handleSubmit = async () => {
+        const enteredYears = (formData.status || [])
+            .map((s) => String(s?.joined).trim())
+            .filter(Boolean);
+
+        const duplicates = enteredYears.filter(
+            (yr, idx) => enteredYears.indexOf(yr) !== idx
+        );
+
+        if (duplicates.length > 0) {
+            toast({
+                title: "Duplicate Year Entry",
+                description: `Year ${duplicates[0]} already exists in status history. You cannot add multiple positions for the same year—please modify the existing entry instead.`,
+                status: "warning",
+                duration: 5000,
+                isClosable: true
+            });
+            return;
+        }
+
         try {
             const payload = {
                 ...formData,
@@ -204,21 +218,30 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
                         joined: Number(s.joined)
                     }))
             };
+            delete payload._id;
+            delete payload.__v;
+            delete payload.createdAt;
+            delete payload.updatedAt;
+
             await axios.patch(`/api/v1/teams/${team.usn}`, payload);
             toast({
                 title: "Updated",
-                description: `${team.name}'s details have been updated successfully.`,
+                description: `${formData.name || team.name}'s details have been updated successfully.`,
                 status: "success",
                 duration: 5000,
                 isClosable: true
             });
-            onEdit(formData);
+            onEdit(payload);
             onClose();
         } catch (error) {
             console.error("Error updating team member:", error);
+            const errorMsg =
+                error.response?.data?.error ||
+                error.message ||
+                "Unable to update team member.";
             toast({
                 title: "Error",
-                description: "Unable to update team member.",
+                description: errorMsg,
                 status: "error",
                 duration: 5000,
                 isClosable: true
@@ -284,10 +307,11 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
                                     spacing={3}
                                     key={i}
                                 >
-                                    <FormControl>
+                                    <FormControl isRequired>
                                         <FormLabel>Position</FormLabel>
                                         <Select
                                             name={`status.${i}.position`}
+                                            placeholder="Select position"
                                             value={row.position || ""}
                                             onChange={handleInputChange}
                                         >
@@ -309,20 +333,31 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
                                             </option>
                                         </Select>
                                     </FormControl>
-                                    <FormControl>
+                                    <FormControl isRequired isInvalid={isDuplicateYear(row.joined, i)}>
                                         <FormLabel>Year</FormLabel>
-                                        <Select
+                                        <Input
+                                            type="number"
                                             name={`status.${i}.joined`}
-                                            placeholder="Select year"
+                                            placeholder="e.g. 2026"
                                             value={row.joined || ""}
                                             onChange={handleInputChange}
-                                        >
-                                            {yearOptions.map((yr) => (
-                                                <option key={yr} value={yr}>
-                                                    {formatTeamYear(yr)}
-                                                </option>
-                                            ))}
-                                        </Select>
+                                            onInput={(e) => {
+                                                if (e.target.value.length > 4) {
+                                                    e.target.value = e.target.value.slice(0, 4);
+                                                }
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            max={9999}
+                                        />
+                                        {isDuplicateYear(row.joined, i) && (
+                                            <FormErrorMessage>
+                                                Year {row.joined} already exists. Please modify that entry instead.
+                                            </FormErrorMessage>
+                                        )}
                                     </FormControl>
                                     <Button
                                         onClick={() => removeStatusRow(i)}
