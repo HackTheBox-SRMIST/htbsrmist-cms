@@ -11,6 +11,7 @@ import {
     FormControl,
     FormLabel,
     FormErrorMessage,
+    FormHelperText,
     Input,
     InputGroup,
     InputLeftElement,
@@ -91,6 +92,7 @@ const getSocialHint = (val) => {
 const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
     const [formData, setFormData] = useState({ ...team });
     const [picImgError, setPicImgError] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const toast = useToast();
 
     useEffect(() => {
@@ -183,6 +185,8 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
     };
 
     const handleSubmit = async () => {
+        if (submitting) return;
+
         const enteredYears = (formData.status || [])
             .map((s) => String(s?.joined).trim())
             .filter(Boolean);
@@ -202,6 +206,7 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
             return;
         }
 
+        setSubmitting(true);
         try {
             const payload = {
                 ...formData,
@@ -222,6 +227,7 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
             delete payload.__v;
             delete payload.createdAt;
             delete payload.updatedAt;
+            delete payload.usn;
 
             await axios.patch(`/api/v1/teams/${team.usn}`, payload);
             toast({
@@ -246,6 +252,8 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
                 duration: 5000,
                 isClosable: true
             });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -259,6 +267,20 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
                 <ModalCloseButton />
                 <ModalBody>
                     <Stack spacing={4}>
+                        <FormControl isReadOnly>
+                            <FormLabel>RA Number / USN</FormLabel>
+                            <Input
+                                name="usn"
+                                value={formData.usn || team.usn || ""}
+                                isReadOnly
+                                cursor="not-allowed"
+                                opacity={0.8}
+                                className="bg-gray-100 dark:bg-gray-800 font-mono text-sm"
+                            />
+                            <FormHelperText className="text-xs text-gray-500 dark:text-gray-400">
+                                Registration number (RA Number / USN) is fixed and cannot be modified.
+                            </FormHelperText>
+                        </FormControl>
                         <FormControl>
                             <FormLabel>Index (Optional)</FormLabel>
                             <Input
@@ -585,10 +607,17 @@ const EditModal = ({ isOpen, onClose, team, onEdit, existingYears = [] }) => {
                 </ModalBody>
 
                 <ModalFooter>
-                    <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+                    <Button
+                        colorScheme="blue"
+                        mr={3}
+                        onClick={handleSubmit}
+                        isLoading={submitting}
+                        loadingText="Saving..."
+                        isDisabled={submitting}
+                    >
                         Save
                     </Button>
-                    <Button variant="ghost" onClick={onClose}>
+                    <Button variant="ghost" onClick={onClose} isDisabled={submitting}>
                         Cancel
                     </Button>
                 </ModalFooter>

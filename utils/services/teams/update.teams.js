@@ -8,6 +8,8 @@ async function updateTeams(usn, req, res) {
         delete update.__v;
         delete update.createdAt;
         delete update.updatedAt;
+        // Do not allow modifying primary identifier USN during updates
+        delete update.usn;
 
         if (update.index === "" || update.index === null || update.index === undefined) {
             update.index = null;
