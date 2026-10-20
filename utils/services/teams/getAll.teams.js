@@ -18,12 +18,34 @@ function latestStatus(team) {
 
 async function getAllTeams(req, res) {
     try {
-        const { domain, position, isCurrent } = req.query;
+        const { domain, position, isCurrent, year } = req.query;
 
-        // Build base filter (domain and isCurrent are top-level)
+        // Build base filter
         const filter = {};
         if (domain) filter.domain = domain;
-        if (isCurrent !== undefined) filter.isCurrent = isCurrent === "true";
+
+        const currentYear = new Date().getFullYear();
+
+        if (isCurrent !== undefined) {
+            if (isCurrent === "true") {
+                // Current member: active AND belongs to the current academic year (2026)
+                filter.isCurrent = true;
+                filter.$or = [
+                    { "status.joined": currentYear },
+                    { status: { $size: 0 }, joined: currentYear }
+                ];
+            } else if (isCurrent === "false") {
+                filter.isCurrent = false;
+            }
+        }
+
+        if (year) {
+            const yrNum = Number(year);
+            filter.$or = [
+                { "status.joined": yrNum },
+                { status: { $size: 0 }, joined: yrNum }
+            ];
+        }
 
         // Fetch matching documents first, then filter by position using latest status
         const teams = await Team.find(filter);

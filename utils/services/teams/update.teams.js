@@ -3,6 +3,11 @@ import Team from "@/utils/models/teams.model";
 async function updateTeams(usn, req, res) {
     try {
         const update = { ...req.body };
+        if (update.index === "" || update.index === null) {
+            update.index = null;
+        } else if (update.index !== undefined) {
+            update.index = Number(update.index);
+        }
         if (!Array.isArray(update.status) || update.status.length === 0) {
             if (update.position && update.joined) {
                 update.status = [

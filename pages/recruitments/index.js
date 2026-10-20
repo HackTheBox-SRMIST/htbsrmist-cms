@@ -46,6 +46,7 @@ import {
 } from "@chakra-ui/react";
 
 import withAuth from "@/components/withAuth";
+import { determineCohortYear } from "@/utils/misc/years";
 import LoadingSpinner from "@/components/shared/Loading";
 import DownloadJSON from "@/components/shared/DownloadJSON";
 import SelectJSONFields from "@/components/shared/SelectJSONFields";
@@ -73,6 +74,7 @@ const Recruitment = () => {
     const [filters, setFilters] = useState({
         domain1: [],
         domain2: [],
+        year: [],
     });
 
     const { isOpen: isExcelModalOpen, onOpen: onExcelModalOpen, onClose: onExcelModalClose } = useDisclosure();
@@ -113,10 +115,57 @@ const Recruitment = () => {
     }, [fetchData]);
 
     const determineYear = useCallback((usn) => {
-        const currentYear = new Date().getFullYear().toString().slice(-2);
-        const usnYear = usn.substring(2, 4);
-        return usnYear === currentYear ? "1st" : "2nd";
+        return determineCohortYear(usn);
     }, []);
+
+    const uniqueCohortYears = useMemo(() => {
+        const set = new Set();
+        recruitmentData.forEach((item) => {
+            const yr = determineCohortYear(item.usn);
+            if (yr && yr !== "Unknown") set.add(yr);
+        });
+        const order = ["1st", "2nd", "3rd", "4th"];
+        return Array.from(set).sort((a, b) => {
+            const idxA = order.indexOf(a);
+            const idxB = order.indexOf(b);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            return a.localeCompare(b);
+        });
+    }, [recruitmentData]);
+
+    const yearFilteredData = useMemo(() => {
+        if (!filters.year || filters.year.length === 0) return recruitmentData;
+        return recruitmentData.filter((item) =>
+            filters.year.includes(determineCohortYear(item.usn))
+        );
+    }, [recruitmentData, filters.year]);
+
+    const countsByYear = useMemo(() => {
+        const counts = { "1st": 0, "2nd": 0, "3rd": 0, "4th": 0 };
+        yearFilteredData.forEach((item) => {
+            const yr = determineCohortYear(item.usn);
+            counts[yr] = (counts[yr] || 0) + 1;
+        });
+        return counts;
+    }, [yearFilteredData]);
+
+    const { domain1Counts, domain2Counts } = useMemo(() => {
+        const d1 = {};
+        const d2 = {};
+        domainsList.forEach((domain) => {
+            d1[domain] = 0;
+            d2[domain] = 0;
+        });
+        yearFilteredData.forEach((item) => {
+            if (item.domain1 && domainsList.includes(item.domain1)) {
+                d1[item.domain1] = (d1[item.domain1] || 0) + 1;
+            }
+            if (item.domain2 && domainsList.includes(item.domain2)) {
+                d2[item.domain2] = (d2[item.domain2] || 0) + 1;
+            }
+        });
+        return { domain1Counts: d1, domain2Counts: d2 };
+    }, [domainsList, yearFilteredData]);
 
     const processDomains = useCallback((data) => {
         const domain1Count = {};
@@ -177,7 +226,7 @@ const Recruitment = () => {
         datasets: [
             {
                 label: "Domain1 Registrations",
-                data: domainsList.map((domain) => domains1[domain] || 0),
+                data: domainsList.map((domain) => domain1Counts[domain] || 0),
                 backgroundColor: [
                     "#FF6384",
                     "#36A2EB",
@@ -186,14 +235,14 @@ const Recruitment = () => {
                 ]
             }
         ]
-    }), [domains1, domainsList]);
+    }), [domain1Counts, domainsList]);
 
     const domain2ChartData = useMemo(() => ({
         labels: domainsList,
         datasets: [
             {
                 label: "Domain2 Registrations",
-                data: domainsList.map((domain) => domains2[domain] || 0),
+                data: domainsList.map((domain) => domain2Counts[domain] || 0),
                 backgroundColor: [
                     "#FF6384",
                     "#36A2EB",
@@ -202,23 +251,28 @@ const Recruitment = () => {
                 ]
             }
         ]
-    }), [domains2, domainsList]);
+    }), [domain2Counts, domainsList]);
 
     const filteredData = useMemo(() => {
         return recruitmentData.filter(record => {
             const domain1Match = filters.domain1.length === 0 || filters.domain1.includes(record.domain1);
             const domain2Match = filters.domain2.length === 0 || filters.domain2.includes(record.domain2);
-            return domain1Match && domain2Match;
+            const yearMatch = !filters.year || filters.year.length === 0 || filters.year.includes(determineCohortYear(record.usn));
+            return domain1Match && domain2Match && yearMatch;
         });
     }, [recruitmentData, filters]);
 
     const executeCsvDownload = useCallback(() => {
-        let finalData = recruitmentData;
+        let baseData = recruitmentData;
+        if (filters.year && filters.year.length > 0) {
+            baseData = baseData.filter(item => filters.year.includes(determineCohortYear(item.usn)));
+        }
+        let finalData = baseData;
         
         if (csvDownloadType === 'domain1' && csvDomainChoice) {
-            finalData = recruitmentData.filter(item => item.domain1 === csvDomainChoice);
+            finalData = baseData.filter(item => item.domain1 === csvDomainChoice);
         } else if (csvDownloadType === 'domain2' && csvDomainChoice) {
-            finalData = recruitmentData.filter(item => item.domain2 === csvDomainChoice);
+            finalData = baseData.filter(item => item.domain2 === csvDomainChoice);
         } else if (csvDownloadType !== 'both') {
             console.warn("Please select a domain choice.");
             return;
@@ -254,7 +308,7 @@ const Recruitment = () => {
                 position: "top",
             });
         }
-    }, [recruitmentData, csvDownloadType, csvDomainChoice, onCsvModalClose, toast]);
+    }, [recruitmentData, filters.year, csvDownloadType, csvDomainChoice, onCsvModalClose, toast]);
 
     const convertToCSV = (data) => {
         const header = Object.keys(data[0]).join(",") + "\n";
@@ -267,14 +321,18 @@ const Recruitment = () => {
     };
 
     const executeExcelDownload = useCallback(() => {
-        let finalData = recruitmentData;
+        let baseData = recruitmentData;
+        if (filters.year && filters.year.length > 0) {
+            baseData = baseData.filter(item => filters.year.includes(determineCohortYear(item.usn)));
+        }
+        let finalData = baseData;
         let sheetName = "Recruitments";
         
         if (excelDownloadType === 'domain1' && excelDomainChoice) {
-            finalData = recruitmentData.filter(item => item.domain1 === excelDomainChoice);
+            finalData = baseData.filter(item => item.domain1 === excelDomainChoice);
             sheetName = excelDomainChoice.substring(0, 31);
         } else if (excelDownloadType === 'domain2' && excelDomainChoice) {
-            finalData = recruitmentData.filter(item => item.domain2 === excelDomainChoice);
+            finalData = baseData.filter(item => item.domain2 === excelDomainChoice);
             sheetName = excelDomainChoice.substring(0, 31);
         } else if (excelDownloadType !== 'both') {
             console.warn("Please select a domain choice.");
@@ -396,7 +454,7 @@ const Recruitment = () => {
                 position: "top",
             });
         }
-    }, [recruitmentData, determineYear, excelDownloadType, excelDomainChoice, onExcelModalClose, toast]);
+    }, [recruitmentData, filters.year, determineYear, excelDownloadType, excelDomainChoice, onExcelModalClose, toast]);
 
     if (loading) {
         return <LoadingSpinner />;
@@ -416,15 +474,14 @@ const Recruitment = () => {
                 Recruitment Data Statistics
             </Heading>
             <Text fontSize="lg" textAlign="center" fontWeight="bold" mb={4}>
-                Total Registrations: {recruitmentData.length}
+                Total Registrations: {yearFilteredData.length}
             </Text>
-            <Flex justify="center" direction={{ base: "column", sm: "row" }} gap={{ base: 4, sm: 10 }} textAlign="center" mb={4}>
-                <Text fontSize="lg">
-                    First Year: <strong>{yearCounts.firstYear}</strong>
-                </Text>
-                <Text fontSize="lg">
-                    Second Year: <strong>{yearCounts.secondYear}</strong>
-                </Text>
+            <Flex justify="center" direction={{ base: "column", sm: "row" }} wrap="wrap" gap={{ base: 4, sm: 8 }} textAlign="center" mb={4}>
+                {["1st", "2nd", "3rd", "4th"].map((yr) => (
+                    <Text key={yr} fontSize="lg">
+                        {yr} Year: <strong>{countsByYear[yr] || 0}</strong>
+                    </Text>
+                ))}
             </Flex>
 
             <Flex justify="space-around" direction={{ base: "column", md: "row" }} align="center" gap={{ base: 10, md: 4 }} mb={8}>
@@ -523,6 +580,28 @@ const Recruitment = () => {
                                                     colorScheme="green"
                                                 >
                                                     {domain}
+                                                </Checkbox>
+                                            </Box>
+                                        ))}
+                                    </VStack>
+                                </MenuList>
+                            </Menu>
+
+                            <Menu>
+                                <MenuButton as={Button} colorScheme="green">
+                                    Filter Year
+                                </MenuButton>
+                                <MenuList bg="gray.800" borderColor="gray.600" color="white" zIndex={10}> 
+                                    <VStack align="start">
+                                        {uniqueCohortYears.map(year => (
+                                            <Box key={year} ml={3}> 
+                                                <Checkbox
+                                                    value={year}
+                                                    isChecked={filters.year.includes(year)}
+                                                    onChange={() => handleFilterChange('year', year)}
+                                                    colorScheme="green"
+                                                >
+                                                    {year} Year
                                                 </Checkbox>
                                             </Box>
                                         ))}

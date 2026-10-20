@@ -15,6 +15,7 @@ import {
     Flex,
     Text
 } from "@chakra-ui/react";
+import { determineCohortYear } from "@/utils/misc/years";
 
 const DownloadJSON = ({ data, fileName = 'data', filters }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -31,7 +32,11 @@ const DownloadJSON = ({ data, fileName = 'data', filters }) => {
         domain2: true,
     });
 
-    const isFiltered = filters && (filters.domain1.length > 0 || filters.domain2.length > 0);
+    const isFiltered =
+        filters &&
+        (filters.domain1?.length > 0 ||
+            filters.domain2?.length > 0 ||
+            filters.year?.length > 0);
 
     const handleJsonFieldChange = useCallback((field) => {
         setSelectedJsonFields(prev => ({
@@ -48,9 +53,7 @@ const DownloadJSON = ({ data, fileName = 'data', filters }) => {
                 if (selectedJsonFields.email) jsonItem.email = item.email;
                 if (selectedJsonFields.reg_no) jsonItem.reg_no = item.usn;
                 if (selectedJsonFields.year) {
-                    const currentYear = new Date().getFullYear().toString().slice(-2);
-                    const usnYear = item.usn ? item.usn.substring(2, 4) : "";
-                    jsonItem.year = usnYear === currentYear ? "1st" : "2nd";
+                    jsonItem.year = determineCohortYear(item.usn);
                 }
                 if (selectedJsonFields.domain1) jsonItem.domain1 = item.domain1;
                 if (selectedJsonFields.domain2) jsonItem.domain2 = item.domain2;
@@ -98,8 +101,8 @@ const DownloadJSON = ({ data, fileName = 'data', filters }) => {
                                 <Text fontSize="sm" color="green.300" textAlign="center">
                                     <Text as="span" fontWeight="bold">{isFiltered ? "Note:" : "Tip:"}</Text> {
                                         isFiltered 
-                                            ? "You are downloading data according to your active Domain filters on the page."
-                                            : "You can use the Domain filters on the main page to download specific candidates!"
+                                            ? "You are downloading data according to your active filters on the page."
+                                            : "You can use the filters on the main page to download specific candidates!"
                                     }
                                 </Text>
                             </Box>

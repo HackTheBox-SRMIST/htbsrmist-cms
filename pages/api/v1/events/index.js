@@ -1,7 +1,7 @@
 import Event from "@/utils/models/event.models";
 import DBInstance from "@/utils/db";
 
-DBInstance();
+// Connection managed inside handler
 
 const parseEventDate = (event) => {
   if (!event) return 0;
@@ -70,6 +70,7 @@ const parseEventDate = (event) => {
 
 export default async function handler(req, res) {
   try {
+    await DBInstance();
     // ✅ Handle GET (fetch all events sorted by latest date first)
     if (req.method === "GET") {
       const events = await Event.find().lean();
