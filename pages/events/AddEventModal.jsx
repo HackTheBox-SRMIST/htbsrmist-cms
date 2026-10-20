@@ -3,8 +3,9 @@ import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 import { useTheme } from "@/provider/ThemeProvider";
 import { Themes } from "@/utils/misc/themes";
-import { Image as ImageIcon, Trash2, Edit2, ExternalLink } from "lucide-react";
+import { Image as ImageIcon, Trash2, Edit2, ExternalLink, Globe } from "lucide-react";
 import CertificateDesigner from "@/components/events/CertificateDesigner";
+import { isImageUrl } from "@/utils/misc/socialUrls";
 
 const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
     const isEdit = Boolean(initialData);
@@ -111,12 +112,14 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
 
     const [formData, setFormData] = useState(() => buildFormData(initialData));
     const [submitting, setSubmitting] = useState(false);
+    const [posterImgError, setPosterImgError] = useState(false);
 
     useEffect(() => {
         setFormData(buildFormData(initialData));
         setGalleryInput("");
         setEditingGalleryIndex(null);
         setError("");
+        setPosterImgError(false);
     }, [initialData]);
 
     const [error, setError] = useState("");
@@ -147,6 +150,7 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+        if (name === "poster_url") setPosterImgError(false);
         setFormData({
             ...formData,
             [name]: type === "checkbox" ? checked : value,
@@ -566,6 +570,27 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
                                     onChange={handleChange}
                                     className={inputCls}
                                 />
+                                {formData.poster_url && formData.poster_url.trim() && (
+                                    <div className="mt-2 flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 bg-black/10 dark:bg-white/5 flex items-center justify-center shrink-0">
+                                            {!posterImgError ? (
+                                                <img
+                                                    src={formData.poster_url.trim()}
+                                                    alt="Poster Preview"
+                                                    onError={() => setPosterImgError(true)}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <ImageIcon className="w-5 h-5 text-red-400" />
+                                            )}
+                                        </div>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            {posterImgError
+                                                ? "Image failed to load (check URL)"
+                                                : "Live poster thumbnail preview"}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             <div>
@@ -577,6 +602,21 @@ const AddEventModal = ({ onClose, onEventAdded, initialData = null }) => {
                                     onChange={handleChange}
                                     className={inputCls}
                                 />
+                                {formData.registration_url && formData.registration_url.trim() && (
+                                    <div className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                        {isImageUrl(formData.registration_url) ? (
+                                            <>
+                                                <ImageIcon className="w-3.5 h-3.5 text-dark-accent" />
+                                                <span>Looks like an image URL</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Globe className="w-3.5 h-3.5 text-dark-accent" />
+                                                <span>Looks like a website URL</span>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Prerequisites */}

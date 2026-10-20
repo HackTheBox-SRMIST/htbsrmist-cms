@@ -40,6 +40,7 @@ module.exports = {
         fadeOut: "fadeOut 0.4s ease-in-out forwards",
       },
       colors: {
+        "htb-green": "#9FEF00",
         ...Themes,
       },
       backgroundImage: {

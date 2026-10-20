@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { getEventTimestamp, getEventYear } from "@/utils/misc/years";
 import axios from "axios";
 import {
     useToast,
@@ -39,82 +40,27 @@ const Events = () => {
     const deleteCancelRef = useRef();
     const [pendingToggleEvent, setPendingToggleEvent] = useState(null);
     const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
+    const [selectedYear, setSelectedYear] = useState("All");
 
-    const getEventTimestamp = (event) => {
-        if (!event) return 0;
-        const rawDate = event.event_date ? String(event.event_date).trim() : "";
+    const allEvents = useMemo(() => [...currentEvents, ...pastEvents], [currentEvents, pastEvents]);
+    const eventYears = useMemo(() => {
+        const years = new Set();
+        allEvents.forEach((ev) => {
+            const yr = getEventYear(ev);
+            if (yr) years.add(yr);
+        });
+        return Array.from(years).sort((a, b) => b - a);
+    }, [allEvents]);
 
-        if (!rawDate) {
-            if (event._id && typeof event._id === "string" && event._id.length >= 8) {
-                const ts = parseInt(event._id.substring(0, 8), 16);
-                if (!isNaN(ts)) return ts * 1000;
-            }
-            return 0;
-        }
+    const filteredCurrentEvents = useMemo(() => {
+        if (selectedYear === "All" || !selectedYear) return currentEvents;
+        return currentEvents.filter((ev) => getEventYear(ev) === Number(selectedYear));
+    }, [currentEvents, selectedYear]);
 
-        // 1. If it has a date range like "3rd March - 10th March 2026" or "10th - 12th Oct 2025" or "10 to 12 Oct 2025"
-        let dateStr = rawDate;
-        if (dateStr.includes(" - ") || dateStr.includes(" to ") || dateStr.includes("–")) {
-            const parts = dateStr.split(/ - | to |–/);
-            const lastPart = parts[parts.length - 1].trim();
-            // If last part has a year, use it; otherwise append year from the original string
-            if (/\d{4}/.test(lastPart)) {
-                dateStr = lastPart;
-            } else {
-                const yearMatch = rawDate.match(/\b(20\d{2})\b/);
-                if (yearMatch) {
-                    dateStr = `${lastPart} ${yearMatch[1]}`;
-                }
-            }
-        }
-
-        // 2. Check for DD/MM/YY or DD/MM/YYYY or DD-MM-YY(YY) like "17/04/23" or "25-08-2023"
-        const dmyMatch = dateStr.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})$/);
-        if (dmyMatch) {
-            let day = parseInt(dmyMatch[1], 10);
-            let month = parseInt(dmyMatch[2], 10) - 1;
-            let year = parseInt(dmyMatch[3], 10);
-            if (year < 100) year += 2000;
-            const d = new Date(year, month, day);
-            if (!isNaN(d.getTime())) return d.getTime();
-        }
-
-        // 3. Clean ordinals: 12th -> 12, 1st -> 1, 23th -> 23
-        let cleaned = dateStr.replace(/(\d+)(st|nd|rd|th)/gi, "$1").trim();
-
-        // 4. Check if year is missing (e.g. "30th Sep" or "15 March")
-        if (!/\b(20\d{2})\b/.test(cleaned)) {
-            let fallbackYear = new Date().getFullYear();
-            if (event._id && typeof event._id === "string" && event._id.length >= 8) {
-                const idTime = parseInt(event._id.substring(0, 8), 16);
-                if (!isNaN(idTime)) {
-                    fallbackYear = new Date(idTime * 1000).getFullYear();
-                }
-            } else if (event.createdAt) {
-                const t = new Date(event.createdAt).getFullYear();
-                if (!isNaN(t)) fallbackYear = t;
-            }
-            cleaned = `${cleaned} ${fallbackYear}`;
-        }
-
-        // 5. Try standard Date.parse and Date object
-        let parsed = Date.parse(cleaned);
-        if (!isNaN(parsed)) return parsed;
-
-        const direct = new Date(cleaned).getTime();
-        if (!isNaN(direct)) return direct;
-
-        // 6. Fallback to MongoDB _id timestamp
-        if (event._id && typeof event._id === "string" && event._id.length >= 8) {
-            const ts = parseInt(event._id.substring(0, 8), 16);
-            if (!isNaN(ts)) return ts * 1000;
-        }
-        if (event.createdAt) {
-            const t = new Date(event.createdAt).getTime();
-            if (!isNaN(t)) return t;
-        }
-        return 0;
-    };
+    const filteredPastEvents = useMemo(() => {
+        if (selectedYear === "All" || !selectedYear) return pastEvents;
+        return pastEvents.filter((ev) => getEventYear(ev) === Number(selectedYear));
+    }, [pastEvents, selectedYear]);
 
     const fetchEvents = async () => {
         try {
@@ -239,7 +185,7 @@ const Events = () => {
         <div className="min-h-screen bg-light-background-darker dark:bg-dark-background-darker px-4 sm:px-6 lg:px-8 py-10">
             {/* Header Section */}
             <div className="max-w-7xl mx-auto mb-12">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                     <div>
                         <h1 className="text-4xl md:text-5xl font-bold dark:text-dark-accent text-light-color mb-2">
                             Current Events
@@ -248,12 +194,32 @@ const Events = () => {
                             Discover upcoming events and activities
                         </p>
                     </div>
-                    <button
-                        className="bg-light-background-light dark:bg-dark-background-light hover:bg-light-background-darker dark:hover:bg-dark-side shadow-lg text-light-color dark:text-dark-accent px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:shadow-xl hover:scale-105"
-                        onClick={() => setShowAddEventModal(true)}
-                    >
-                        + Add New Event
-                    </button>
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2 bg-light-background-light dark:bg-dark-background-light px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
+                            <label htmlFor="events-year-filter" className="text-sm font-semibold dark:text-dark-accent text-light-color whitespace-nowrap">
+                                Year:
+                            </label>
+                            <select
+                                id="events-year-filter"
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                                className="bg-light-background-dark dark:bg-dark-background-dark border border-gray-300 dark:border-gray-700 px-3 py-1.5 rounded-lg text-sm text-light-color dark:text-dark-color focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                            >
+                                <option value="All">All Years</option>
+                                {eventYears.map((yr) => (
+                                    <option key={yr} value={yr}>
+                                        {yr}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <button
+                            className="bg-light-background-light dark:bg-dark-background-light hover:bg-light-background-darker dark:hover:bg-dark-side shadow-lg text-light-color dark:text-dark-accent px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:shadow-xl hover:scale-105"
+                            onClick={() => setShowAddEventModal(true)}
+                        >
+                            + Add New Event
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -659,7 +625,7 @@ const Events = () => {
                                 Delete Event
                             </AlertDialogHeader>
                             <AlertDialogBody>
-                                Are you sure you really want to delete "{pendingDeleteEvent.event_name}"? This action cannot be undone.
+                                Are you sure you really want to delete &ldquo;{pendingDeleteEvent.event_name}&rdquo;? This action cannot be undone.
                             </AlertDialogBody>
                             <AlertDialogFooter>
                                 <Button ref={deleteCancelRef} onClick={onDeleteClose}>

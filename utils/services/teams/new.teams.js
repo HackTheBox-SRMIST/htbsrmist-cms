@@ -3,6 +3,11 @@ import Team from "@/utils/models/teams.model";
 async function newTeams(req, res) {
     try {
         const body = { ...req.body };
+        if (body.index === "" || body.index === null || body.index === undefined) {
+            delete body.index;
+        } else {
+            body.index = Number(body.index);
+        }
         // Normalize legacy fields to new status array if needed
         if (!Array.isArray(body.status) || body.status.length === 0) {
             if (body.position && body.joined) {

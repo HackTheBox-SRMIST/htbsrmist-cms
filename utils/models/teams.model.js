@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const teamsSchema = new mongoose.Schema({
     index: {
         type: Number,
-        required: true
+        required: false
     },
     usn: {
         type: String,
